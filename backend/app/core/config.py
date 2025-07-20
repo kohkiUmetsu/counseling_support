@@ -29,6 +29,19 @@ class Settings(BaseSettings):
     # OpenAI
     OPENAI_API_KEY: Optional[str] = None
     
+    # Vector Search Settings
+    EMBEDDING_MODEL: str = "text-embedding-3-small"
+    EMBEDDING_DIMENSIONS: int = 1536
+    MAX_CHUNK_TOKENS: int = 512
+    SIMILARITY_THRESHOLD: float = 0.7
+    
+    # Clustering Settings
+    MIN_CLUSTER_SIZE: int = 5
+    MAX_CLUSTERS: int = 15
+    
+    # Redis (for caching)
+    REDIS_URL: str = "redis://localhost:6379"
+    
     class Config:
         env_file = ".env"
 

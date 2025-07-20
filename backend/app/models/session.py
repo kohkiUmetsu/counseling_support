@@ -28,3 +28,4 @@ class CounselingSession(Base):
     
     # Relationship
     transcription = relationship("Transcription", back_populates="session", uselist=False)
+    vectors = relationship("SuccessConversationVector", back_populates="session")

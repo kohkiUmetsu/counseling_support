@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { SuccessFailureToggle } from './SuccessFailureToggle';
 import { MetadataForm } from './MetadataForm';
-import { updateSessionLabel } from '@/app/services/api';
+import { updateSessionLabel } from '@/app/lib/api';
 import { CheckCircle, AlertCircle } from 'lucide-react';
 
 interface LabelingFormProps {

@@ -42,7 +42,7 @@ export default function UploadPage() {
         setUploadProgress(progress);
       });
 
-      setSessionId(response.sessionId);
+      setSessionId(response.session_id);
       setUploadStatus('success');
       
       console.log('Upload successful:', response);

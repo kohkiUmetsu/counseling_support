@@ -17,7 +17,7 @@ export default function Home() {
     const checkHealth = async () => {
       try {
         const response = await counselingApi.healthCheck();
-        setHealthStatus(response.data);
+        setHealthStatus(response.data as { status: string; message: string; timestamp: string });
       } catch (error) {
         console.error('Health check failed:', error);
         setHealthStatus({

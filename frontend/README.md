@@ -1,52 +1,36 @@
-# Counseling Support System - Frontend
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-Next.js App Router を使用したフロントエンドアプリケーション
+## Getting Started
 
-## セットアップ
+First, run the development server:
 
-1. 依存関係のインストール
-```bash
-npm install
-```
-
-2. 環境変数の設定
-```bash
-cp .env.example .env.local
-```
-
-3. 開発サーバーの起動
 ```bash
 npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
-## 主要な機能
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-- **音声録音**: ブラウザでの音声録音とリアルタイム波形表示
-- **ファイルアップロード**: ドラッグ&ドロップ対応の音声ファイルアップロード
-- **ラベリング**: セッションの成功/失敗ラベル付け
-- **文字起こし**: OpenAI Whisperを使用した自動文字起こし
-- **データ管理**: 話者分離とタイムスタンプ付きの文字起こし表示・編集
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-## ページ構成
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-- `/`: ホームページ（アップロードページにリダイレクト）
-- `/upload`: 音声ファイルアップロード
-- `/recording`: ブラウザ音声録音
-- `/labeling/[sessionId]`: セッションラベリング
-- `/transcription/[sessionId]`: 文字起こし表示・編集
+## Learn More
 
-## 技術スタック
+To learn more about Next.js, take a look at the following resources:
 
-- **Framework**: Next.js 14 (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **State Management**: React Hooks
-- **API Client**: Axios
-- **WebSocket**: Native WebSocket API
-- **Icons**: Lucide React
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-## 開発時の注意点
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-- バックエンドAPIは `http://localhost:8000` で起動している必要があります
-- WebSocket接続は `ws://localhost:8000/api/v1/ws/{sessionId}` で行います
-- API routes は `/api/*` パスでNext.jsのプロキシ機能を使用できます
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
