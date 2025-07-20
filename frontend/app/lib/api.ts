@@ -90,3 +90,33 @@ export const counselingApi = {
     improvement_score?: number;
   }) => api.post<ImprovementScript>(`/counseling/sessions/${sessionId}/improvements`, data),
 };
+
+// Audio Processing API Types
+export interface UploadAudioResponse {
+  sessionId: string;
+  fileUrl: string;
+  fileName: string;
+  fileSize: number;
+  duration?: number;
+}
+
+export interface SessionLabel {
+  sessionId: string;
+  isSuccess: boolean;
+  counselorName: string;
+  comment?: string;
+}
+
+// Audio Processing using Repository Functions
+import { 
+  uploadAudio as repoUploadAudio,
+  getSession as repoGetSession,
+  updateSessionLabel as repoUpdateSessionLabel,
+  SessionData,
+  UploadResponse
+} from '@/app/repository';
+
+// Audio Processing API Functions
+export const uploadAudio = repoUploadAudio;
+export const getSession = repoGetSession;
+export const updateSessionLabel = repoUpdateSessionLabel;

@@ -7,6 +7,8 @@ import { cn } from '@/app/utils/cn';
 const navigation = [
   { name: 'ダッシュボード', href: '/' },
   { name: 'セッション管理', href: '/sessions' },
+  { name: '音声録音', href: '/recording' },
+  { name: '音声アップロード', href: '/upload' },
   { name: '設定', href: '/settings' },
 ];
 

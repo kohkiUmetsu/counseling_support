@@ -1,35 +1,35 @@
 from pydantic_settings import BaseSettings
 from typing import Optional
-import os
 
 class Settings(BaseSettings):
-    # Database
-    database_url: str = "postgresql://counseling_user:counseling_password@localhost:5432/counseling_db"
-    vector_database_url: str = "postgresql://vector_user:vector_password@localhost:5433/counseling_vector_db"
+    # AWS S3
+    AWS_ACCESS_KEY_ID: str
+    AWS_SECRET_ACCESS_KEY: str
+    AWS_REGION: str = "ap-northeast-1"
+    S3_BUCKET_NAME: str
     
-    # Application
-    app_name: str = "Counseling Support API"
-    debug: bool = True
-    environment: str = "development"
+    # Database
+    DATABASE_URL: str
     
     # API
-    api_v1_str: str = "/api/v1"
+    API_V1_PREFIX: str = "/api/v1"
     
-    # CORS
-    allowed_origins: list = ["http://localhost:3000"]
-    
-    # AWS
-    aws_region: str = "ap-northeast-1"
-    s3_bucket_name: str = "counseling-support-audio-files"
+    # File Upload
+    MAX_UPLOAD_SIZE: int = 500 * 1024 * 1024  # 500MB
+    ALLOWED_AUDIO_FORMATS: list[str] = [
+        "audio/webm",
+        "audio/mp3",
+        "audio/mpeg",
+        "audio/wav",
+        "audio/x-wav",
+        "audio/mp4",
+        "audio/x-m4a",
+    ]
     
     # OpenAI
-    openai_api_key: Optional[str] = None
-    
-    # Security
-    secret_key: str = "development-secret-key-change-in-production"
+    OPENAI_API_KEY: Optional[str] = None
     
     class Config:
         env_file = ".env"
-        case_sensitive = False
 
 settings = Settings()
