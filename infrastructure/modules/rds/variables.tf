@@ -23,6 +23,11 @@ variable "ecs_security_group_id" {
   type        = string
 }
 
+variable "bastion_security_group_id" {
+  description = "Bastion host security group ID"
+  type        = string
+}
+
 variable "db_instance_class" {
   description = "RDS instance class"
   type        = string

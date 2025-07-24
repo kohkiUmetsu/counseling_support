@@ -1,23 +1,28 @@
-"""Add vector tables and pgvector extension
+"""Add vector tables
 
-Revision ID: 002
-Revises: 001
-Create Date: 2024-07-20 12:00:00.000000
+Revision ID: b6c375a00ba9
+Revises: 2a50506a30b9
+Create Date: 2025-07-24 16:50:21.711220
 
 """
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
-from pgvector.sqlalchemy import Vector
+try:
+    from pgvector.sqlalchemy import Vector
+except ImportError:
+    # Define Vector as a text column if pgvector is not available
+    def Vector(dimensions):
+        return sa.Text()
 
 # revision identifiers, used by Alembic.
-revision = '002'
-down_revision = '001'
+revision = 'b6c375a00ba9'
+down_revision = '2a50506a30b9'
 branch_labels = None
 depends_on = None
 
 
-def upgrade():
+def upgrade() -> None:
     # pgvector拡張の有効化
     op.execute('CREATE EXTENSION IF NOT EXISTS vector;')
     
@@ -80,14 +85,6 @@ def upgrade():
     )
     
     # インデックスの作成
-    # ベクトル検索用のIVFFLATインデックス
-    op.execute("""
-        CREATE INDEX ON success_conversation_vectors 
-        USING ivfflat (embedding vector_cosine_ops)
-        WITH (lists = 100);
-    """)
-    
-    # その他のインデックス
     op.create_index('ix_success_conversation_vectors_session_id', 'success_conversation_vectors', ['session_id'])
     op.create_index('ix_cluster_assignments_cluster_result_id', 'cluster_assignments', ['cluster_result_id'])
     op.create_index('ix_cluster_assignments_cluster_label', 'cluster_assignments', ['cluster_label'])
@@ -95,7 +92,7 @@ def upgrade():
     op.create_index('ix_cluster_representatives_is_primary', 'cluster_representatives', ['is_primary'])
 
 
-def downgrade():
+def downgrade() -> None:
     # インデックスの削除
     op.drop_index('ix_cluster_representatives_is_primary', 'cluster_representatives')
     op.drop_index('ix_cluster_representatives_cluster_result_id', 'cluster_representatives')
@@ -103,15 +100,9 @@ def downgrade():
     op.drop_index('ix_cluster_assignments_cluster_result_id', 'cluster_assignments')
     op.drop_index('ix_success_conversation_vectors_session_id', 'success_conversation_vectors')
     
-    # ベクトル検索インデックスの削除
-    op.execute("DROP INDEX IF EXISTS success_conversation_vectors_embedding_idx;")
-    
     # テーブルの削除
     op.drop_table('anomaly_detection_results')
     op.drop_table('cluster_representatives')
     op.drop_table('cluster_assignments')
     op.drop_table('cluster_results')
     op.drop_table('success_conversation_vectors')
-    
-    # pgvector拡張の削除（慎重に）
-    # op.execute('DROP EXTENSION IF EXISTS vector;')

@@ -19,6 +19,14 @@ resource "aws_security_group" "rds" {
     security_groups = [var.ecs_security_group_id]
   }
 
+  # Allow access from bastion host
+  ingress {
+    from_port       = 5432
+    to_port         = 5432
+    protocol        = "tcp"
+    security_groups = [var.bastion_security_group_id]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
