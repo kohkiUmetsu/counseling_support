@@ -50,15 +50,32 @@ module "s3" {
   environment  = local.environment
 }
 
+# EC2 Bastion Host
+module "ec2" {
+  source = "../../modules/ec2"
+  
+  project_name        = local.project_name
+  environment         = local.environment
+  vpc_id             = module.vpc.vpc_id
+  public_subnet_ids  = module.vpc.public_subnet_ids
+  key_pair_name      = var.key_pair_name
+  
+  db_endpoint          = module.rds.db_instance_endpoint
+  vector_db_endpoint   = module.rds.aurora_cluster_endpoint
+  db_username         = var.db_username
+  vector_db_username  = var.vector_db_username
+}
+
 # RDS
 module "rds" {
   source = "../../modules/rds"
   
-  project_name           = local.project_name
-  environment            = local.environment
-  vpc_id                = module.vpc.vpc_id
-  private_subnet_ids    = module.vpc.private_subnet_ids
-  ecs_security_group_id = module.ecs.ecs_security_group_id
+  project_name              = local.project_name
+  environment               = local.environment
+  vpc_id                   = module.vpc.vpc_id
+  private_subnet_ids       = module.vpc.private_subnet_ids
+  ecs_security_group_id    = module.ecs.ecs_security_group_id
+  bastion_security_group_id = module.ec2.bastion_security_group_id
   
   db_username        = var.db_username
   db_password        = var.db_password

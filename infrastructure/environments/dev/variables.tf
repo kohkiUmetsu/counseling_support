@@ -33,3 +33,9 @@ variable "vector_db_password" {
   type        = string
   sensitive   = true
 }
+
+variable "key_pair_name" {
+  description = "Name of the EC2 Key Pair for SSH access to bastion host"
+  type        = string
+  default     = "counseling-support-dev-key"
+}
