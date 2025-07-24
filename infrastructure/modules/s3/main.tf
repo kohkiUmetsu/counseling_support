@@ -41,6 +41,8 @@ resource "aws_s3_bucket_lifecycle_configuration" "audio_files" {
     id     = "audio_files_lifecycle"
     status = "Enabled"
 
+    filter {}
+
     transition {
       days          = 30
       storage_class = "STANDARD_IA"

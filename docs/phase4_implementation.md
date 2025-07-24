@@ -376,4 +376,60 @@ DELETE /api/v1/scripts/{script_id}            # スクリプト削除
 - バージョン管理・ロールバック機能
 - 詳細な使用分析・効果測定
 
+### 新規実装完了チェックリスト
+
+- ✅ F4-007: 継続学習・モデル改善機能
+
+## F4-007: 継続学習・モデル改善機能（✅完了）
+
+### 実装内容
+
+#### ContinuousLearningService (`backend/app/services/continuous_learning_service.py`)
+
+**主要機能:**
+- 新規データでのモデル自動更新
+- 生成品質の継続監視
+- A/Bテスト機能対応
+- フィードバックループ構築
+
+**継続学習パイプライン:**
+```python
+class ContinuousLearningService:
+    async def execute_continuous_learning(self, db, force_update=False):
+        # 学習実行条件のチェック
+        trigger_check = await self.check_learning_trigger(db)
+        
+        # 新規データの収集と検証
+        new_data = await self._collect_and_validate_new_data(db)
+        
+        # ベクトル化とクラスタリングの更新
+        updated_vectors = await self._update_vector_clusters(db, new_data)
+        
+        # 代表例の再選出
+        new_representatives = await self._reselect_representatives(db, updated_vectors)
+        
+        # テストスクリプトの生成と品質評価
+        test_results = await self._generate_and_evaluate_test_scripts(
+            db, new_representatives, baseline_quality
+        )
+        
+        # 品質改善が確認された場合のモデル更新
+        if test_results["improvement_confirmed"]:
+            deployment_result = await self._deploy_updated_model(db, test_results)
+        
+        return learning_results
+```
+
+**学習トリガー条件:**
+- 新規会話数が10件以上
+- 品質低下が3日以上継続
+- 定期実行間隔（7日）到達
+- 初回学習実行
+
+**品質改善評価:**
+- 最小改善閾値: 5%
+- テストスクリプト品質比較
+- 統計的有意性検証
+- 自動モデル更新判定
+
 フェーズ4により、美容脱毛業界特化の高品質AIスクリプト生成システムの核となる機能が完成しました。

@@ -6,6 +6,14 @@ terraform {
       version = "~> 5.0"
     }
   }
+  
+  backend "s3" {
+    bucket         = "counseling-support-dev-terraform-state"
+    key            = "dev/terraform.tfstate"
+    region         = "ap-northeast-1"
+    dynamodb_table = "counseling-support-dev-terraform-locks"
+    encrypt        = true
+  }
 }
 
 provider "aws" {
@@ -31,6 +39,7 @@ module "vpc" {
   availability_zones    = local.availability_zones
   public_subnet_cidrs   = local.public_subnet_cidrs
   private_subnet_cidrs  = local.private_subnet_cidrs
+  nat_gateway_count     = 1  # Dev環境では1つに削減
 }
 
 # S3
@@ -51,7 +60,9 @@ module "rds" {
   private_subnet_ids    = module.vpc.private_subnet_ids
   ecs_security_group_id = module.ecs.ecs_security_group_id
   
+  db_username        = var.db_username
   db_password        = var.db_password
+  vector_db_username = var.vector_db_username
   vector_db_password = var.vector_db_password
   
   # Development settings
@@ -71,8 +82,8 @@ module "ecs" {
   private_subnet_ids = module.vpc.private_subnet_ids
   
   backend_image        = var.backend_image
-  database_url         = "postgresql://${module.rds.db_instance_endpoint}/counseling_db"
-  vector_database_url  = "postgresql://${module.rds.aurora_cluster_endpoint}/counseling_vector_db"
+  database_url         = "postgresql://${var.db_username}:${var.db_password}@${module.rds.db_instance_endpoint}/counseling_db"
+  vector_database_url  = "postgresql://${var.vector_db_username}:${var.vector_db_password}@${module.rds.aurora_cluster_endpoint}/counseling_vector_db"
   s3_bucket_name      = module.s3.s3_bucket_name
   s3_access_role_arn  = module.s3.s3_access_role_arn
   aws_region          = var.aws_region

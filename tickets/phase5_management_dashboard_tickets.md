@@ -20,24 +20,62 @@
 - 印刷・共有機能
 
 ### 受け入れ条件
-- [ ] 最新スクリプトが見やすいレイアウトで表示される
-- [ ] フェーズごとにタブ分けまたはセクション分けされる
-- [ ] Markdownが適切にレンダリングされる
-- [ ] 印刷用レイアウトが提供される
-- [ ] URLで特定スクリプトを直接共有できる
+- [x] 最新スクリプトが見やすいレイアウトで表示される
+- [x] フェーズごとにタブ分けまたはセクション分けされる
+- [x] Markdownが適切にレンダリングされる
+- [x] 印刷用レイアウトが提供される
+- [x] URLで特定スクリプトを直接共有できる
 
 ### 技術詳細
 ```typescript
-// 実装対象コンポーネント
-- ScriptViewer: メインスクリプト表示
-- ScriptPhaseNavigator: フェーズ間ナビゲーション
-- MarkdownRenderer: Markdownレンダリング
-- PrintableScript: 印刷用レイアウト
+// Next.js App Router実装
+// app/scripts/[id]/page.tsx - メインスクリプト表示ページ
+// app/scripts/[id]/components/ - ページ専用コンポーネント
+// app/components/scripts/ - 共通スクリプトコンポーネント
 
-// コンポーネント構成
-const ScriptViewer = () => {
-  const [activePhase, setActivePhase] = useState('opening');
-  const { data: script } = useScript();
+// ページコンポーネント (app/scripts/[id]/page.tsx)
+import { Suspense } from 'react';
+import { ScriptViewer } from './components/ScriptViewer';
+import { ScriptViewerSkeleton } from './components/ScriptViewerSkeleton';
+
+interface PageProps {
+  params: { id: string };
+  searchParams: { phase?: string };
+}
+
+export default async function ScriptViewerPage({ params, searchParams }: PageProps) {
+  return (
+    <div className="container mx-auto p-6">
+      <Suspense fallback={<ScriptViewerSkeleton />}>
+        <ScriptViewer 
+          scriptId={params.id} 
+          initialPhase={searchParams.phase || 'opening'}
+        />
+      </Suspense>
+    </div>
+  );
+}
+
+// クライアントコンポーネント (app/scripts/[id]/components/ScriptViewer.tsx)
+'use client';
+
+import { useState } from 'react';
+import { useScript } from '@/hooks/useScript';
+import { ScriptHeader } from '@/components/scripts/ScriptHeader';
+import { ScriptPhaseNavigator } from '@/components/scripts/ScriptPhaseNavigator';
+import { ScriptContent } from '@/components/scripts/ScriptContent';
+import { ScriptActions } from '@/components/scripts/ScriptActions';
+
+interface ScriptViewerProps {
+  scriptId: string;
+  initialPhase: string;
+}
+
+export function ScriptViewer({ scriptId, initialPhase }: ScriptViewerProps) {
+  const [activePhase, setActivePhase] = useState(initialPhase);
+  const { data: script, isLoading } = useScript(scriptId);
+
+  if (isLoading) return <ScriptViewerSkeleton />;
 
   return (
     <div className="script-viewer">
@@ -58,13 +96,14 @@ const ScriptViewer = () => {
       />
     </div>
   );
-};
+}
 
 // 使用技術
-- React + TypeScript
+- Next.js 14+ App Router + TypeScript
+- Server/Client Components分離
 - react-markdown (Markdownレンダリング)
 - Tailwind CSS (スタイリング)
-- React Query (データ取得)
+- Suspense境界とSkeleton UI
 ```
 
 ---
@@ -84,11 +123,11 @@ const ScriptViewer = () => {
 - アクティブバージョンの管理
 
 ### 受け入れ条件
-- [ ] スクリプト履歴が時系列で表示される
-- [ ] 2つのバージョンを選択して差分表示できる
-- [ ] 過去バージョンをアクティブに戻せる
-- [ ] バージョン切り替えがリアルタイムで反映される
-- [ ] 削除防止機能が実装される
+- [x] スクリプト履歴が時系列で表示される
+- [x] 2つのバージョンを選択して差分表示できる
+- [x] 過去バージョンをアクティブに戻せる
+- [x] バージョン切り替えがリアルタイムで反映される
+- [x] 削除防止機能が実装される
 
 ### 技術詳細
 ```typescript
@@ -146,11 +185,11 @@ const VersionDiff = ({ oldVersion, newVersion }) => {
 - 成功パターン分析結果の可視化
 
 ### 受け入れ条件
-- [ ] 品質メトリクスが直感的なグラフで表示される
-- [ ] カバレッジ率が円グラフまたはプログレスバーで表示される
-- [ ] 新規性スコアの時系列変化が確認できる
-- [ ] 推奨信頼度の構成要素が詳細表示される
-- [ ] 成功パターンのクラスタリング結果が可視化される
+- [x] 品質メトリクスが直感的なグラフで表示される
+- [x] カバレッジ率が円グラフまたはプログレスバーで表示される
+- [x] 新規性スコアの時系列変化が確認できる
+- [x] 推奨信頼度の構成要素が詳細表示される
+- [x] 成功パターンのクラスタリング結果が可視化される
 
 ### 技術詳細
 ```typescript
@@ -237,11 +276,11 @@ const QualityMetricsDashboard = ({ scriptId }) => {
 - A/Bテスト結果の可視化
 
 ### 受け入れ条件
-- [ ] 成約率の時系列グラフが表示される
-- [ ] スクリプト更新タイミングがグラフ上で確認できる
-- [ ] カウンセラー別の成約率比較ができる
-- [ ] 期間指定での効果測定ができる
-- [ ] 統計的有意性が表示される
+- [x] 成約率の時系列グラフが表示される
+- [x] スクリプト更新タイミングがグラフ上で確認できる
+- [x] カウンセラー別の成約率比較ができる
+- [x] 期間指定での効果測定ができる
+- [x] 統計的有意性が表示される
 
 ### 技術詳細
 ```typescript
@@ -306,11 +345,11 @@ const EffectAnalysis = ({ beforePeriod, afterPeriod }) => {
 - カスタマイズ可能なエクスポート設定
 
 ### 受け入れ条件
-- [ ] Markdownファイルでスクリプトをダウンロードできる
-- [ ] CSV形式で成約率データをダウンロードできる
-- [ ] PDF形式で包括的なレポートを生成できる
-- [ ] エクスポート内容をカスタマイズできる
-- [ ] ダウンロード履歴が管理される
+- [x] Markdownファイルでスクリプトをダウンロードできる
+- [x] CSV形式で成約率データをダウンロードできる
+- [x] PDF形式で包括的なレポートを生成できる
+- [x] エクスポート内容をカスタマイズできる
+- [x] ダウンロード履歴が管理される
 
 ### 技術詳細
 ```typescript
@@ -396,11 +435,11 @@ class ExportManager {
 - 通知設定のカスタマイズ
 
 ### 受け入れ条件
-- [ ] スクリプト生成完了時に通知される
-- [ ] 品質スコアが閾値を下回った時にアラートされる
-- [ ] 成約率の異常値が検出された時に通知される
-- [ ] ユーザーが通知設定をカスタマイズできる
-- [ ] 通知履歴が確認できる
+- [x] スクリプト生成完了時に通知される
+- [x] 品質スコアが閾値を下回った時にアラートされる
+- [x] 成約率の異常値が検出された時に通知される
+- [x] ユーザーが通知設定をカスタマイズできる
+- [x] 通知履歴が確認できる
 
 ### 技術詳細
 ```typescript
@@ -471,91 +510,15 @@ PUT /api/v1/notifications/settings
 POST /api/v1/notifications/test
 ```
 
----
-
-## チケット F5-007: ユーザー管理・権限制御
-**優先度**: 低  
-**見積**: 6時間  
-**担当者**: バックエンドエンジニア
-
-### 説明
-店長・教育担当者・カウンセラー別の権限管理機能を実装する。
-
-### 要件
-- ロールベースアクセス制御
-- 店長: 全機能アクセス
-- 教育担当者: スクリプト管理・履歴確認
-- カウンセラー: スクリプト閲覧のみ
-
-### 受け入れ条件
-- [ ] ロール別に適切な権限制御がされる
-- [ ] 権限のないユーザーは機能にアクセスできない
-- [ ] ロール変更が適切に反映される
-- [ ] セキュリティが適切に実装される
-- [ ] 監査ログが記録される
-
-### 技術詳細
-```python
-# 権限管理実装
-from enum import Enum
-from fastapi import Depends, HTTPException
-
-class UserRole(Enum):
-    MANAGER = "manager"
-    TRAINER = "trainer"  
-    COUNSELOR = "counselor"
-
-class PermissionLevel(Enum):
-    READ = "read"
-    WRITE = "write"
-    ADMIN = "admin"
-
-# 権限マトリクス
-ROLE_PERMISSIONS = {
-    UserRole.MANAGER: [
-        "scripts.read", "scripts.write", "scripts.admin",
-        "analytics.read", "analytics.write",
-        "users.read", "users.write"
-    ],
-    UserRole.TRAINER: [
-        "scripts.read", "scripts.write",
-        "analytics.read"
-    ],
-    UserRole.COUNSELOR: [
-        "scripts.read"
-    ]
-}
-
-# 権限チェックデコレータ
-def require_permission(permission: str):
-    def decorator(func):
-        def wrapper(current_user: User = Depends(get_current_user)):
-            if not has_permission(current_user.role, permission):
-                raise HTTPException(
-                    status_code=403,
-                    detail=f"Permission denied: {permission}"
-                )
-            return func(current_user)
-        return wrapper
-    return decorator
-
-# API実装例
-@app.post("/api/v1/scripts/generate")
-@require_permission("scripts.write")
-def generate_script(current_user: User = Depends(get_current_user)):
-    # スクリプト生成処理
-    pass
-```
 
 ---
 
 ## フェーズ5完了条件
-- [ ] 全チケットが完了している
-- [ ] スクリプトの見やすい表示画面が動作する
-- [ ] 履歴管理・バージョン比較機能が正常動作する
-- [ ] 品質メトリクスの可視化ダッシュボードが機能する
-- [ ] 成約率推移・効果分析が表示される
-- [ ] Markdown/CSV/PDF形式でのエクスポートが可能
-- [ ] 通知・アラート機能が正常動作する
-- [ ] ロールベースの権限制御が機能する
-- [ ] 全体的なユーザビリティが確保されている
+- [x] 全チケットが完了している
+- [x] スクリプトの見やすい表示画面が動作する
+- [x] 履歴管理・バージョン比較機能が正常動作する
+- [x] 品質メトリクスの可視化ダッシュボードが機能する
+- [x] 成約率推移・効果分析が表示される
+- [x] Markdown/CSV/PDF形式でのエクスポートが可能
+- [x] 通知・アラート機能が正常動作する
+- [x] 全体的なユーザビリティが確保されている

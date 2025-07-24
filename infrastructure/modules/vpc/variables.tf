@@ -28,3 +28,9 @@ variable "private_subnet_cidrs" {
   description = "CIDR blocks for private subnets"
   type        = list(string)
 }
+
+variable "nat_gateway_count" {
+  description = "Number of NAT gateways to create"
+  type        = number
+  default     = 2
+}

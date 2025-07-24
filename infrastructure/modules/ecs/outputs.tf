@@ -22,3 +22,8 @@ output "ecs_security_group_id" {
   description = "ECS security group ID"
   value       = aws_security_group.ecs.id
 }
+
+output "migration_task_definition_arn" {
+  description = "ARN of the migration task definition"
+  value       = aws_ecs_task_definition.migration.arn
+}

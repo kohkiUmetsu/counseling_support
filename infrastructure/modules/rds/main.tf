@@ -36,7 +36,7 @@ resource "aws_security_group" "rds" {
 resource "aws_db_instance" "main" {
   identifier             = "${var.project_name}-${var.environment}-db"
   engine                 = "postgres"
-  engine_version         = "15.4"
+  engine_version         = "15.8"
   instance_class         = var.db_instance_class
   allocated_storage      = var.db_allocated_storage
   max_allocated_storage  = var.db_max_allocated_storage
@@ -65,7 +65,7 @@ resource "aws_db_instance" "main" {
 resource "aws_rds_cluster" "aurora_vector" {
   cluster_identifier      = "${var.project_name}-${var.environment}-aurora-vector"
   engine                 = "aurora-postgresql"
-  engine_version         = "15.4"
+  engine_version         = "15.8"
   database_name          = var.vector_db_name
   master_username        = var.vector_db_username
   master_password        = var.vector_db_password

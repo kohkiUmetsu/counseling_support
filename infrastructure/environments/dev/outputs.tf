@@ -17,3 +17,8 @@ output "s3_bucket_name" {
   description = "S3 bucket name"
   value       = module.s3.s3_bucket_name
 }
+
+output "migration_task_definition_arn" {
+  description = "ARN of the migration task definition"
+  value       = module.ecs.migration_task_definition_arn
+}

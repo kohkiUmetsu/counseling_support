@@ -28,7 +28,7 @@ def upgrade():
         sa.Column('session_id', postgresql.UUID(as_uuid=True), sa.ForeignKey('counseling_sessions.id'), nullable=False),
         sa.Column('chunk_text', sa.Text(), nullable=False),
         sa.Column('embedding', Vector(1536), nullable=False),
-        sa.Column('metadata', postgresql.JSONB(), nullable=True),
+        sa.Column('chunk_metadata', postgresql.JSONB(), nullable=True),
         sa.Column('chunk_index', sa.Integer(), nullable=False, default=0),
         sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.func.now())
     )

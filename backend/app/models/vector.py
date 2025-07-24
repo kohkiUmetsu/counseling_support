@@ -19,7 +19,7 @@ class SuccessConversationVector(Base):
     session_id = Column(UUID(as_uuid=True), ForeignKey("counseling_sessions.id"), nullable=False)
     chunk_text = Column(Text, nullable=False)
     embedding = Column(Vector(1536), nullable=False)  # OpenAI text-embedding-3-small の次元数
-    metadata = Column(JSONB, nullable=True)
+    chunk_metadata = Column(JSONB, nullable=True)
     chunk_index = Column(Integer, nullable=False, default=0)
     created_at = Column(DateTime, default=datetime.utcnow)
 

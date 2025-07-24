@@ -1,148 +1,207 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Button } from './components/ui/Button';
-import { LoadingSpinner } from './components/ui/LoadingSpinner';
-import { counselingApi } from './lib/api';
+import Link from 'next/link';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { 
+  Upload,
+  Target,
+  Zap,
+  FileText,
+  ArrowRight,
+  CheckCircle,
+  Star,
+  Mic
+} from 'lucide-react';
+
+const features = [
+  {
+    title: 'データアップロード',
+    description: '会話データのアップロードと前処理',
+    href: '/upload',
+    icon: Upload,
+    status: 'completed',
+    phase: 'フェーズ1',
+  },
+  {
+    title: '録音',
+    description: '会話の録音と音声データ管理',
+    href: '/recording',
+    icon: Mic,
+    status: 'completed',
+    phase: 'フェーズ1',
+  },
+  {
+    title: 'ラベリング',
+    description: '成功・失敗の手動ラベリング',
+    href: '/labeling',
+    icon: Target,
+    status: 'completed',
+    phase: 'フェーズ2',
+  },
+  {
+    title: 'スクリプト生成',
+    description: 'AIによる改善スクリプト生成',
+    href: '/scripts/generate',
+    icon: Zap,
+    status: 'completed',
+    phase: 'フェーズ4',
+  },
+  {
+    title: 'スクリプト管理',
+    description: 'スクリプトの表示・管理',
+    href: '/scripts',
+    icon: FileText,
+    status: 'completed',
+    phase: 'フェーズ5',
+  },
+];
+
+const getStatusBadge = (status: string) => {
+  switch (status) {
+    case 'completed':
+      return <Badge className="bg-green-500 hover:bg-green-600">完了</Badge>;
+    case 'available':
+      return <Badge variant="outline">利用可能</Badge>;
+    default:
+      return <Badge variant="secondary">開発中</Badge>;
+  }
+};
+
+const getStatusIcon = (status: string) => {
+  switch (status) {
+    case 'completed':
+      return <CheckCircle className="h-5 w-5 text-green-600" />;
+    case 'available':
+      return <Star className="h-5 w-5 text-blue-600" />;
+    default:
+      return null;
+  }
+};
 
 export default function Home() {
-  const [healthStatus, setHealthStatus] = useState<{
-    status: string;
-    message: string;
-    timestamp: string;
-  } | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const checkHealth = async () => {
-      try {
-        const response = await counselingApi.healthCheck();
-        setHealthStatus(response.data as { status: string; message: string; timestamp: string });
-      } catch (error) {
-        console.error('Health check failed:', error);
-        setHealthStatus({
-          status: 'error',
-          message: 'バックエンドAPIに接続できません',
-          timestamp: new Date().toISOString(),
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    checkHealth();
-  }, []);
-
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">
-          カウンセリング支援ツール
+      {/* ヘッダー */}
+      <div className="text-center">
+        <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          Counseling Support
         </h1>
-        <p className="mt-2 text-lg text-gray-600">
-          美容医療クリニック向けカウンセリングスクリプト改善AIツール
+        <p className="text-xl text-gray-600 mb-2">
+          美容脱毛業界特化 AIカウンセリングスクリプト生成システム
+        </p>
+        <p className="text-lg text-gray-500">
+          ベクトル検索・クラスタリング・GPT-4oによる高品質スクリプト生成
         </p>
       </div>
 
-      {/* Health Status */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">
-          システム状態
-        </h2>
-        {loading ? (
-          <div className="flex items-center space-x-2">
-            <LoadingSpinner size="sm" />
-            <span className="text-gray-600">接続確認中...</span>
+      {/* システム概要 */}
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg text-white p-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="text-center">
+            <div className="text-3xl font-bold">3</div>
+            <div className="text-blue-100">実装フェーズ</div>
           </div>
-        ) : healthStatus ? (
-          <div
-            className={`p-4 rounded-md ${
-              healthStatus.status === 'healthy'
-                ? 'bg-green-50 text-green-800'
-                : 'bg-red-50 text-red-800'
-            }`}
-          >
-            <p className="font-medium">
-              {healthStatus.status === 'healthy' ? '✅ 正常' : '❌ エラー'}
-            </p>
-            <p className="text-sm mt-1">{healthStatus.message}</p>
+          <div className="text-center">
+            <div className="text-3xl font-bold">5</div>
+            <div className="text-blue-100">主要機能</div>
           </div>
-        ) : null}
+          <div className="text-center">
+            <div className="text-3xl font-bold">MVP</div>
+            <div className="text-blue-100">開発ステータス</div>
+          </div>
+        </div>
       </div>
 
-      {/* Feature Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-medium text-gray-900">
-            セッション管理
-          </h3>
-          <p className="mt-2 text-gray-600">
-            カウンセリングセッションの作成・管理
-          </p>
-          <Button className="mt-4" size="sm">
-            セッション一覧
-          </Button>
+      {/* 機能一覧 */}
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">機能一覧</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {features.map((feature) => (
+            <Card key={feature.href} className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <feature.icon className="h-8 w-8 text-blue-600" />
+                  {getStatusIcon(feature.status)}
+                </div>
+                <CardTitle className="flex items-center justify-between">
+                  <span>{feature.title}</span>
+                  {getStatusBadge(feature.status)}
+                </CardTitle>
+                <CardDescription>{feature.description}</CardDescription>
+                <div className="text-xs text-gray-500">{feature.phase}</div>
+              </CardHeader>
+              <CardContent>
+                <Link href={feature.href}>
+                  <Button 
+                    className="w-full" 
+                    variant={feature.status === 'completed' ? 'default' : 'outline'}
+                  >
+                    <span>開く</span>
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          ))}
         </div>
+      </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-medium text-gray-900">
-            音声文字起こし
-          </h3>
-          <p className="mt-2 text-gray-600">
-            音声ファイルからテキストへの変換
-          </p>
-          <Button className="mt-4" size="sm" variant="secondary">
-            開発予定
-          </Button>
-        </div>
+      {/* 推奨ワークフロー */}
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">推奨ワークフロー</h2>
+        <Card>
+          <CardHeader>
+            <CardTitle>スクリプト生成・改善のステップ</CardTitle>
+            <CardDescription>
+              効果的なスクリプト生成のための推奨手順
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+                <div className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
+                  1
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-medium">データアップロード</h4>
+                  <p className="text-sm text-gray-600">会話データをシステムに取り込む</p>
+                </div>
+                <Link href="/upload">
+                  <Button size="sm" variant="outline">開始</Button>
+                </Link>
+              </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-medium text-gray-900">
-            スクリプト改善
-          </h3>
-          <p className="mt-2 text-gray-600">
-            AIによるカウンセリングスクリプトの改善提案
-          </p>
-          <Button className="mt-4" size="sm" variant="secondary">
-            開発予定
-          </Button>
-        </div>
+              <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+                <div className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
+                  2
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-medium">ラベリング</h4>
+                  <p className="text-sm text-gray-600">成功・失敗の判定とメタデータ付与</p>
+                </div>
+                <Link href="/labeling">
+                  <Button size="sm" variant="outline">実行</Button>
+                </Link>
+              </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-medium text-gray-900">
-            成功事例検索
-          </h3>
-          <p className="mt-2 text-gray-600">
-            ベクトル検索による成功事例の抽出
-          </p>
-          <Button className="mt-4" size="sm" variant="secondary">
-            開発予定
-          </Button>
-        </div>
+              <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+                <div className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
+                  3
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-medium">スクリプト生成</h4>
+                  <p className="text-sm text-gray-600">AIによる改善スクリプト自動生成</p>
+                </div>
+                <Link href="/scripts/generate">
+                  <Button size="sm">生成開始</Button>
+                </Link>
+              </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-medium text-gray-900">
-            分析ダッシュボード
-          </h3>
-          <p className="mt-2 text-gray-600">
-            カウンセリング品質の分析と可視化
-          </p>
-          <Button className="mt-4" size="sm" variant="secondary">
-            開発予定
-          </Button>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-medium text-gray-900">
-            設定管理
-          </h3>
-          <p className="mt-2 text-gray-600">
-            システム設定とユーザー管理
-          </p>
-          <Button className="mt-4" size="sm" variant="secondary">
-            開発予定
-          </Button>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

@@ -10,10 +10,22 @@ variable "backend_image" {
   default     = "counseling-support-backend:latest"
 }
 
+variable "db_username" {
+  description = "Database username"
+  type        = string
+  default     = "counseling_user"
+}
+
 variable "db_password" {
   description = "Database password"
   type        = string
   sensitive   = true
+}
+
+variable "vector_db_username" {
+  description = "Vector database username"
+  type        = string
+  default     = "vector_user"
 }
 
 variable "vector_db_password" {
