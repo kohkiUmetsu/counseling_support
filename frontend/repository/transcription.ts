@@ -47,18 +47,9 @@ export interface TranscriptionStatus {
   speaker_stats?: SpeakerStats;
 }
 
-export interface TaskStatus {
-  task_id: string;
-  state: 'PENDING' | 'PROCESSING' | 'SUCCESS' | 'FAILURE';
-  progress: number;
-  stage: string;
-  result?: any;
-  error?: string;
-  traceback?: string;
-}
 
-export async function startTranscription(sessionId: string): Promise<{ task_id: string }> {
-  const response = await apiClient.post<{ task_id: string }>(`/transcriptions/${sessionId}/start`);
+export async function startTranscription(sessionId: string): Promise<{ transcription_id: string; status: string }> {
+  const response = await apiClient.post<{ transcription_id: string; status: string }>(`/transcriptions/${sessionId}/start`);
   return response.data;
 }
 
@@ -82,7 +73,3 @@ export async function updateTranscriptionSegment(
   });
 }
 
-export async function getTaskStatus(taskId: string): Promise<TaskStatus> {
-  const response = await apiClient.get<TaskStatus>(`/tasks/${taskId}/status`);
-  return response.data;
-}

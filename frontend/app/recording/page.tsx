@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { AudioRecorder } from '@/app/components/audio/AudioRecorder';
 import { Upload } from 'lucide-react';
+import { uploadAudio } from '@/repository';
 
 export default function RecordingPage() {
   const [recordedAudio, setRecordedAudio] = useState<{
@@ -18,7 +19,6 @@ export default function RecordingPage() {
     if (!recordedAudio) return;
 
     try {
-      const { uploadAudio } = await import('@/repository');
       // Convert blob to file
       const file = new File([recordedAudio.blob], 'recording.webm', {
         type: recordedAudio.blob.type || 'audio/webm'

@@ -3,8 +3,10 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.models.session import CounselingSession
 from app.models.transcription import Transcription
-from app.celery_app.tasks import process_transcription
-from app.celery_app.celery_app import celery_app
+from app.services.transcription.whisper_service import whisper_service
+from app.services.transcription.speaker_diarization import speaker_diarization_service
+from datetime import datetime
+import traceback
 
 router = APIRouter()
 
@@ -14,7 +16,7 @@ async def start_transcription(
     db: Session = Depends(get_db)
 ):
     """
-    Start transcription process for a session
+    Start transcription process for a session (synchronous processing)
     """
     # Check if session exists
     session = db.query(CounselingSession).filter(
@@ -24,25 +26,62 @@ async def start_transcription(
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
     
-    # Check if transcription is already in progress or completed
-    if session.transcription_status in ["processing", "completed"]:
+    # Check if transcription is already completed
+    if session.transcription_status == "completed":
         raise HTTPException(
             status_code=400,
             detail=f"Transcription already {session.transcription_status}"
         )
     
-    # Start transcription task
-    task = process_transcription.delay(session_id)
-    
-    # Update session status
-    session.transcription_status = "processing"
-    db.commit()
-    
-    return {
-        "message": "Transcription started",
-        "task_id": task.id,
-        "session_id": session_id
-    }
+    try:
+        # Update session status to processing
+        session.transcription_status = "processing"
+        db.commit()
+        
+        # Process transcription directly (synchronous)
+        start_time = datetime.utcnow()
+        
+        # Get audio file from S3 and process
+        transcription_result = await whisper_service.transcribe_audio(session_id)
+        
+        # Perform speaker diarization
+        speaker_result = await speaker_diarization_service.process(
+            transcription_result["segments"], 
+            session_id
+        )
+        
+        # Create transcription record
+        transcription = Transcription(
+            session_id=session_id,
+            full_text=transcription_result["full_text"],
+            language=transcription_result["language"],
+            duration=transcription_result["duration"],
+            segments=speaker_result["segments"],
+            speaker_stats=speaker_result["speaker_stats"],
+            processing_time=(datetime.utcnow() - start_time).total_seconds(),
+            status="completed"
+        )
+        
+        db.add(transcription)
+        session.transcription_status = "completed"
+        db.commit()
+        
+        return {
+            "message": "Transcription completed",
+            "transcription_id": transcription.id,
+            "session_id": session_id,
+            "status": "completed"
+        }
+        
+    except Exception as e:
+        # Handle errors
+        session.transcription_status = "failed"
+        db.commit()
+        
+        raise HTTPException(
+            status_code=500,
+            detail=f"Transcription failed: {str(e)}"
+        )
 
 @router.get("/{session_id}/status")
 async def get_transcription_status(
@@ -153,35 +192,3 @@ async def update_transcription_segment(
     
     return {"message": "Segment updated successfully"}
 
-@router.get("/task/{task_id}/status")
-async def get_task_status(task_id: str):
-    """
-    Get Celery task status
-    """
-    task = celery_app.AsyncResult(task_id)
-    
-    if task.state == "PENDING":
-        response = {
-            "task_id": task_id,
-            "state": task.state,
-            "progress": 0,
-            "stage": "waiting"
-        }
-    elif task.state != "FAILURE":
-        response = {
-            "task_id": task_id,
-            "state": task.state,
-            "progress": task.info.get("progress", 0),
-            "stage": task.info.get("stage", "unknown")
-        }
-        if task.state == "SUCCESS":
-            response["result"] = task.result
-    else:
-        response = {
-            "task_id": task_id,
-            "state": task.state,
-            "error": str(task.info.get("error", "Unknown error")),
-            "traceback": task.info.get("traceback")
-        }
-    
-    return response
