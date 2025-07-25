@@ -1,4 +1,4 @@
-import { apiRequest } from './base';
+import { apiClient } from './base';
 
 export interface TranscriptionSegment {
   id: number;
@@ -58,17 +58,18 @@ export interface TaskStatus {
 }
 
 export async function startTranscription(sessionId: string): Promise<{ task_id: string }> {
-  return apiRequest<{ task_id: string }>(`/transcriptions/${sessionId}/start`, {
-    method: 'POST',
-  });
+  const response = await apiClient.post<{ task_id: string }>(`/transcriptions/${sessionId}/start`);
+  return response.data;
 }
 
 export async function getTranscriptionStatus(sessionId: string): Promise<TranscriptionStatus> {
-  return apiRequest<TranscriptionStatus>(`/transcriptions/${sessionId}/status`);
+  const response = await apiClient.get<TranscriptionStatus>(`/transcriptions/${sessionId}/status`);
+  return response.data;
 }
 
 export async function getTranscription(sessionId: string): Promise<TranscriptionData> {
-  return apiRequest<TranscriptionData>(`/transcriptions/${sessionId}`);
+  const response = await apiClient.get<TranscriptionData>(`/transcriptions/${sessionId}`);
+  return response.data;
 }
 
 export async function updateTranscriptionSegment(
@@ -76,12 +77,12 @@ export async function updateTranscriptionSegment(
   segmentIndex: number,
   newText: string
 ): Promise<void> {
-  await apiRequest(`/transcriptions/${transcriptionId}/segments/${segmentIndex}`, {
-    method: 'PATCH',
-    body: JSON.stringify({ new_text: newText }),
+  await apiClient.patch<void>(`/transcriptions/${transcriptionId}/segments/${segmentIndex}`, {
+    new_text: newText,
   });
 }
 
 export async function getTaskStatus(taskId: string): Promise<TaskStatus> {
-  return apiRequest<TaskStatus>(`/tasks/${taskId}/status`);
+  const response = await apiClient.get<TaskStatus>(`/tasks/${taskId}/status`);
+  return response.data;
 }

@@ -3,29 +3,23 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { cn } from '@/app/utils/cn';
-import { Button } from '@/components/ui/button';
+import { cn } from '@/features/utils/cn';
+import { Button } from '@/app/components/ui/button';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
   DropdownMenuItem, 
-  DropdownMenuSeparator, 
   DropdownMenuTrigger 
-} from '@/components/ui/dropdown-menu';
+} from '@/app/components/ui/dropdown-menu';
 import { 
   Home,
   FileText,
-  History,
-  BarChart3,
-  TrendingUp,
-  Settings,
   Upload,
   Menu,
   ChevronDown,
   Zap,
-  Brain,
   Target,
-  User
+  Mic
 } from 'lucide-react';
 
 const navigation = [
@@ -39,6 +33,7 @@ const navigation = [
     icon: Upload,
     children: [
       { name: 'アップロード', href: '/upload', icon: Upload },
+      { name: '録音', href: '/recording', icon: Mic },
       { name: 'ラベリング', href: '/labeling', icon: Target },
     ],
   },
@@ -48,22 +43,7 @@ const navigation = [
     children: [
       { name: 'スクリプト生成', href: '/scripts/generate', icon: Zap },
       { name: 'スクリプト一覧', href: '/scripts', icon: FileText },
-      { name: '履歴管理', href: '/scripts/history', icon: History },
     ],
-  },
-  {
-    name: 'ダッシュボード',
-    icon: BarChart3,
-    children: [
-      { name: '品質メトリクス', href: '/dashboard/quality', icon: Brain },
-      { name: '効果分析', href: '/dashboard/analytics', icon: TrendingUp },
-      { name: 'パフォーマンス', href: '/dashboard/performance', icon: BarChart3 },
-    ],
-  },
-  {
-    name: '設定',
-    href: '/settings',
-    icon: Settings,
   },
 ];
 
@@ -152,35 +132,8 @@ export function Header() {
             ))}
           </nav>
 
-          {/* ユーザーメニュー（デスクトップ） */}
-          <div className="hidden md:flex items-center space-x-4">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="flex items-center space-x-2">
-                  <div className="h-7 w-7 rounded-full bg-gray-200 flex items-center justify-center">
-                    <User className="h-4 w-4" />
-                  </div>
-                  <span className="text-sm">ユーザー</span>
-                  <ChevronDown className="h-3 w-3" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem asChild>
-                  <Link href="/profile">プロフィール</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/settings">設定</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  ログアウト
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-
           {/* モバイルメニューボタン */}
-          <div className="md:hidden">
+          <div className="flex md:hidden">
             <Button 
               variant="ghost" 
               size="sm" 

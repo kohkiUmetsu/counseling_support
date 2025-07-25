@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useWebSocket } from '@/app/hooks/useWebSocket';
+import { useWebSocket } from '@/features/hooks/useWebSocket';
 import { 
   Loader2, 
   CheckCircle, 

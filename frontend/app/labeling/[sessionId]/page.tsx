@@ -4,8 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { LabelingForm } from '@/app/components/labeling/LabelingForm';
 import { AudioPlayer } from '@/app/components/audio/AudioPlayer';
-import { getSession } from '@/app/lib/api';
-import { SessionData } from '@/app/repository';
+import { getSession } from '@/repository';
+import { SessionData } from '@/repository';
 import { LoadingSpinner } from '@/app/components/ui/LoadingSpinner';
 
 

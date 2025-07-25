@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { FileDropzone } from '@/app/components/upload/FileDropzone';
 import { UploadProgress } from '@/app/components/upload/UploadProgress';
-import { uploadAudio } from '@/app/lib/api';
+import { uploadAudio } from '@/repository';
 import { Upload } from 'lucide-react';
 import Link from 'next/link';
 

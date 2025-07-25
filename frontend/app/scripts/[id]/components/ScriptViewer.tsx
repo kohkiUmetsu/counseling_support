@@ -1,13 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { useScript } from '@/hooks/useScript';
-import { ScriptHeader } from '@/components/scripts/ScriptHeader';
-import { ScriptPhaseNavigator } from '@/components/scripts/ScriptPhaseNavigator';
-import { ScriptContent } from '@/components/scripts/ScriptContent';
-import { ScriptActions } from '@/components/scripts/ScriptActions';
+import { useScript } from '@/features/hooks/useScript';
+import { ScriptHeader } from '@/app/components/scripts/ScriptHeader';
+import { ScriptPhaseNavigator } from '@/app/components/scripts/ScriptPhaseNavigator';
+import { ScriptContent } from '@/app/components/scripts/ScriptContent';
+import { ScriptActions } from '@/app/components/scripts/ScriptActions';
 import { ScriptViewerSkeleton } from './ScriptViewerSkeleton';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertDescription } from '@/app/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 
 interface ScriptViewerProps {
@@ -81,7 +81,7 @@ export function ScriptViewer({ scriptId, initialPhase }: ScriptViewerProps) {
           text: 'カウンセリングスクリプトを共有します',
           url: shareUrl,
         });
-      } catch (error) {
+      } catch {
         console.log('Share cancelled');
       }
     } else {
@@ -114,7 +114,7 @@ export function ScriptViewer({ scriptId, initialPhase }: ScriptViewerProps) {
         <div className="lg:col-span-2">
           <ScriptContent 
             phase={activePhase}
-            content={script.content?.[activePhase]}
+            content={script.content?.[activePhase as keyof typeof script.content]}
             successFactors={script.success_factors}
             improvementPoints={script.improvement_points}
           />

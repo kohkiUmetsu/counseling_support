@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/app/components/ui/badge';
+import { Alert, AlertDescription } from '@/app/components/ui/alert';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Lightbulb, TrendingUp, AlertCircle, CheckCircle } from 'lucide-react';
 
 interface ScriptContentProps {

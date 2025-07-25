@@ -8,7 +8,7 @@ interface PageProps {
   searchParams: { phase?: string };
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata(): Promise<Metadata> {
   return {
     title: `スクリプト詳細 | Counseling Support`,
     description: 'カウンセリングスクリプトの詳細表示ページ',

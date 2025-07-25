@@ -12,11 +12,10 @@ import {
   updateTranscriptionSegment,
   pollTaskStatus,
   TranscriptionData,
-  TranscriptionStatus,
-  TaskStatus
-} from '@/app/services/transcription';
+  TranscriptionStatus
+} from '@/features/services/transcription';
 import { AlertCircle, Play, RefreshCw } from 'lucide-react';
-import { Button } from '@/app/components/ui/Button';
+import { Button } from '@/app/components/ui/button';
 
 export default function TranscriptionPage() {
   const params = useParams();
@@ -24,7 +23,7 @@ export default function TranscriptionPage() {
   
   const [transcription, setTranscription] = useState<TranscriptionData | null>(null);
   const [status, setStatus] = useState<TranscriptionStatus | null>(null);
-  const [taskStatus, setTaskStatus] = useState<TaskStatus | null>(null);
+  // const [taskStatus, setTaskStatus] = useState<TaskStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
@@ -80,7 +79,7 @@ export default function TranscriptionPage() {
       
       // Start polling task status
       const cleanup = pollTaskStatus(task_id, (taskStatus) => {
-        setTaskStatus(taskStatus);
+        // setTaskStatus(taskStatus);
         
         if (taskStatus.state === 'SUCCESS') {
           fetchTranscriptionStatus();

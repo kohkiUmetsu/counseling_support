@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
+import { Button } from '@/app/components/ui/button';
+import { Alert, AlertDescription } from '@/app/components/ui/alert';
 import { Zap, Settings, Play, Brain, TrendingUp, Clock } from 'lucide-react';
 
 export const metadata: Metadata = {

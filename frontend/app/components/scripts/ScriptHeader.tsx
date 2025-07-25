@@ -2,7 +2,7 @@
 
 import { format } from 'date-fns';
 import { ja } from 'date-fns/locale';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/app/components/ui/badge';
 import { Calendar, User, Zap, TrendingUp } from 'lucide-react';
 
 interface Script {

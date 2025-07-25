@@ -1,6 +1,6 @@
 'use client';
 
-import { cn } from '@/app/utils/cn';
+import { cn } from '@/features/utils/cn';
 
 interface Phase {
   id: string;

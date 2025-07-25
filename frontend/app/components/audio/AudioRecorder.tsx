@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useMediaRecorder } from '@/app/hooks/useMediaRecorder';
+import { useMediaRecorder } from '@/features/hooks/useMediaRecorder';
 import { WaveformVisualizer } from './WaveformVisualizer';
 import { AudioPlayer } from './AudioPlayer';
 import { RecordingControls } from './RecordingControls';

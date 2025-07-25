@@ -9,7 +9,7 @@ import {
   TranscriptionSegment,
   SpeakerStats,
   TaskStatus
-} from '@/app/repository';
+} from '@/repository';
 
 export type {
   TranscriptionData,

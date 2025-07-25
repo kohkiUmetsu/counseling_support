@@ -18,7 +18,7 @@ export default function RecordingPage() {
     if (!recordedAudio) return;
 
     try {
-      const { uploadAudio } = await import('@/app/lib/api');
+      const { uploadAudio } = await import('@/repository');
       // Convert blob to file
       const file = new File([recordedAudio.blob], 'recording.webm', {
         type: recordedAudio.blob.type || 'audio/webm'
