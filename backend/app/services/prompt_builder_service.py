@@ -26,8 +26,7 @@ class HighQualityPromptBuilder:
         self,
         representative_successes: List[Dict[str, Any]],
         failure_to_success_mappings: List[Dict[str, Any]],
-        failure_conversations: List[Dict[str, Any]],
-        generation_config: Optional[Dict[str, Any]] = None
+        failure_conversations: List[Dict[str, Any]]
     ) -> Dict[str, Any]:
         """
         スクリプト生成用の最適化プロンプトを構築
@@ -36,7 +35,6 @@ class HighQualityPromptBuilder:
             representative_successes: クラスタ代表成功例
             failure_to_success_mappings: 失敗→成功マッピング
             failure_conversations: 分析対象失敗会話
-            generation_config: 生成設定
             
         Returns:
             {
@@ -50,10 +48,9 @@ class HighQualityPromptBuilder:
         """
         try:
             # デフォルト設定
-            config = generation_config or {}
-            focus_areas = config.get('focus_areas', ['opening', 'needs_assessment', 'solution_proposal', 'closing'])
-            target_success_rate = config.get('target_success_rate', 0.8)
-            include_detailed_analysis = config.get('include_detailed_analysis', True)
+            focus_areas = ['opening', 'needs_assessment', 'solution_proposal', 'closing']
+            target_success_rate = 0.8
+            include_detailed_analysis = True
             
             # プロンプトセクションを構築
             sections = self._build_prompt_sections(

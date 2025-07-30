@@ -28,7 +28,6 @@ router = APIRouter()
 class ScriptGenerationRequest(BaseModel):
     cluster_result_id: str = Field(..., description="クラスタリング結果ID")
     failure_conversations: List[Dict[str, Any]] = Field(default=[], description="分析対象失敗会話")
-    generation_config: Optional[Dict[str, Any]] = Field(default=None, description="生成設定")
     title: Optional[str] = Field(default=None, description="スクリプトタイトル")
     description: Optional[str] = Field(default=None, description="スクリプト説明")
 
@@ -72,7 +71,6 @@ async def generate_script(
         # ジョブレコード作成
         generation_job = ScriptGenerationJob(
             job_id=job_id,
-            generation_config=request.generation_config or {},
             input_data={
                 "cluster_result_id": request.cluster_result_id,
                 "failure_conversations": request.failure_conversations,
@@ -520,8 +518,7 @@ async def execute_script_generation(
         
         # 生成実行
         result = await generation_service.generate_improvement_script(
-            analysis_data=analysis_data,
-            generation_config=request_data.get("generation_config")
+            analysis_data=analysis_data
         )
         
         job.progress_percentage = 80

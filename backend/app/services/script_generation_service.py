@@ -33,8 +33,7 @@ class ScriptGenerationService:
         
     async def generate_improvement_script(
         self,
-        analysis_data: Dict[str, Any],
-        generation_config: Optional[Dict[str, Any]] = None
+        analysis_data: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
         改善スクリプト生成のメイン処理
@@ -45,7 +44,6 @@ class ScriptGenerationService:
                 'failure_conversations': [...],
                 'filters': {...}
             }
-            generation_config: 生成設定
             
         Returns:
             {
@@ -67,8 +65,7 @@ class ScriptGenerationService:
             prompt_result = self.prompt_builder.build_script_generation_prompt(
                 representative_successes=prepared_data['representatives'],
                 failure_to_success_mappings=prepared_data['failure_mappings'],
-                failure_conversations=prepared_data['failures'],
-                generation_config=generation_config
+                failure_conversations=prepared_data['failures']
             )
             
             # 3. GPT-4o API呼び出し
@@ -100,8 +97,7 @@ class ScriptGenerationService:
                     'processing_time': processing_time,
                     'cost_estimate': self._calculate_cost(generation_result['usage']),
                     'created_at': end_time.isoformat(),
-                    'model': self.model,
-                    'generation_config': generation_config or {}
+                    'model': self.model
                 }
             }
             

@@ -123,7 +123,6 @@ class ScriptGenerationJob(Base):
     job_id = Column(Text, unique=True, nullable=False)  # 外部から参照するID
     
     # ジョブ設定
-    generation_config = Column(JSONB, nullable=False)
     input_data = Column(JSONB, nullable=False)
     
     # ステータス管理
