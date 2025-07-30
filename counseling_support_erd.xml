@@ -1,0 +1,174 @@
+<mxfile host="app.diagrams.net" modified="2024-01-01T00:00:00.000Z" agent="5.0" etag="xxx" version="22.1.16" type="device">
+  <diagram name="Page-1" id="9361dd3d-8414-5d6b-a6dd-e8e6ec74f6b9">
+    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1.0" pageWidth="1169" pageHeight="827" background="none" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- CounselingSession Table -->
+        <mxCell id="counseling_session" value="CounselingSession" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=1;marginBottom=0;rounded=0;shadow=0;strokeWidth=1;" parent="1" vertex="1">
+          <mxGeometry x="50" y="50" width="200" height="280" as="geometry">
+            <mxRectangle x="50" y="50" width="160" height="26" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cs_pk" value="PK  id: String(36)" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontStyle=4" parent="counseling_session" vertex="1">
+          <mxGeometry y="26" width="200" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="cs_attrs" value="file_url: String(500)&#10;file_name: String(255)&#10;file_size: Integer&#10;file_type: String(50)&#10;duration: Float&#10;is_success: Boolean&#10;counselor_name: String(255)&#10;comment: Text&#10;transcription_status: String(20)&#10;created_at: DateTime&#10;updated_at: DateTime" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="counseling_session" vertex="1">
+          <mxGeometry y="52" width="200" height="228" as="geometry" />
+        </mxCell>
+
+        <!-- Transcription Table -->
+        <mxCell id="transcription" value="Transcription" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=1;marginBottom=0;rounded=0;shadow=0;strokeWidth=1;" parent="1" vertex="1">
+          <mxGeometry x="350" y="50" width="200" height="260" as="geometry" />
+        </mxCell>
+        <mxCell id="t_pk" value="PK  id: String(36)" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontStyle=4" parent="transcription" vertex="1">
+          <mxGeometry y="26" width="200" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="t_fk" value="FK  session_id: String(36)" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontStyle=2" parent="transcription" vertex="1">
+          <mxGeometry y="52" width="200" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="t_attrs" value="full_text: Text&#10;language: String(10)&#10;duration: Float&#10;status: String(20)&#10;segments: JSON&#10;speaker_stats: JSON&#10;processing_time: Float&#10;error_message: Text&#10;created_at: DateTime&#10;updated_at: DateTime" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="transcription" vertex="1">
+          <mxGeometry y="78" width="200" height="182" as="geometry" />
+        </mxCell>
+
+        <!-- TranscriptionSegment Table -->
+        <mxCell id="transcription_segment" value="TranscriptionSegment" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=1;marginBottom=0;rounded=0;shadow=0;strokeWidth=1;" parent="1" vertex="1">
+          <mxGeometry x="650" y="50" width="200" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="ts_pk" value="PK  id: String(36)" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontStyle=4" parent="transcription_segment" vertex="1">
+          <mxGeometry y="26" width="200" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="ts_fk" value="FK  transcription_id: String(36)" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontStyle=2" parent="transcription_segment" vertex="1">
+          <mxGeometry y="52" width="200" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="ts_attrs" value="segment_index: Integer&#10;start_time: Float&#10;end_time: Float&#10;text: Text&#10;speaker: String(20)&#10;speaker_confidence: Float&#10;is_edited: Boolean&#10;original_text: Text&#10;created_at: DateTime&#10;updated_at: DateTime" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="transcription_segment" vertex="1">
+          <mxGeometry y="78" width="200" height="162" as="geometry" />
+        </mxCell>
+
+        <!-- SuccessConversationVector Table -->
+        <mxCell id="success_vector" value="SuccessConversationVector" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=1;marginBottom=0;rounded=0;shadow=0;strokeWidth=1;" parent="1" vertex="1">
+          <mxGeometry x="50" y="380" width="200" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="sv_pk" value="PK  id: UUID" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontStyle=4" parent="success_vector" vertex="1">
+          <mxGeometry y="26" width="200" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="sv_fk" value="FK  session_id: String(36)" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontStyle=2" parent="success_vector" vertex="1">
+          <mxGeometry y="52" width="200" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="sv_attrs" value="chunk_text: Text&#10;embedding: Vector(1536)&#10;chunk_metadata: JSONB&#10;chunk_index: Integer&#10;created_at: DateTime" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="success_vector" vertex="1">
+          <mxGeometry y="78" width="200" height="102" as="geometry" />
+        </mxCell>
+
+        <!-- ImprovementScript Table -->
+        <mxCell id="improvement_script" value="ImprovementScript" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=1;marginBottom=0;rounded=0;shadow=0;strokeWidth=1;" parent="1" vertex="1">
+          <mxGeometry x="350" y="380" width="200" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="is_pk" value="PK  id: UUID" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontStyle=4" parent="improvement_script" vertex="1">
+          <mxGeometry y="26" width="200" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="is_fk" value="FK  cluster_result_id: UUID" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontStyle=2" parent="improvement_script" vertex="1">
+          <mxGeometry y="52" width="200" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="is_attrs" value="version: Text&#10;title: Text&#10;description: Text&#10;content: JSONB&#10;generation_metadata: JSONB&#10;quality_metrics: JSONB&#10;status: Text&#10;is_active: Boolean&#10;created_at: DateTime&#10;updated_at: DateTime&#10;activated_at: DateTime" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="improvement_script" vertex="1">
+          <mxGeometry y="78" width="200" height="162" as="geometry" />
+        </mxCell>
+
+        <!-- ClusterResult Table -->
+        <mxCell id="cluster_result" value="ClusterResult" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=1;marginBottom=0;rounded=0;shadow=0;strokeWidth=1;" parent="1" vertex="1">
+          <mxGeometry x="650" y="380" width="200" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="cr_pk" value="PK  id: UUID" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontStyle=4" parent="cluster_result" vertex="1">
+          <mxGeometry y="26" width="200" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="cr_attrs" value="algorithm: Text&#10;cluster_count: Integer&#10;parameters: JSONB&#10;silhouette_score: Float&#10;created_at: DateTime" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="cluster_result" vertex="1">
+          <mxGeometry y="52" width="200" height="108" as="geometry" />
+        </mxCell>
+
+        <!-- ScriptUsageAnalytics Table -->
+        <mxCell id="script_analytics" value="ScriptUsageAnalytics" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=1;marginBottom=0;rounded=0;shadow=0;strokeWidth=1;" parent="1" vertex="1">
+          <mxGeometry x="50" y="650" width="200" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="sa_pk" value="PK  id: UUID" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontStyle=4" parent="script_analytics" vertex="1">
+          <mxGeometry y="26" width="200" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="sa_fk" value="FK  script_id: UUID" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontStyle=2" parent="script_analytics" vertex="1">
+          <mxGeometry y="52" width="200" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="sa_attrs" value="usage_start_date: DateTime&#10;usage_end_date: DateTime&#10;total_sessions: Integer&#10;successful_sessions: Integer&#10;conversion_rate: Float&#10;baseline_conversion_rate: Float&#10;improvement_rate: Float&#10;created_at: DateTime" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="script_analytics" vertex="1">
+          <mxGeometry y="78" width="200" height="122" as="geometry" />
+        </mxCell>
+
+        <!-- ScriptFeedback Table -->
+        <mxCell id="script_feedback" value="ScriptFeedback" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=1;marginBottom=0;rounded=0;shadow=0;strokeWidth=1;" parent="1" vertex="1">
+          <mxGeometry x="350" y="650" width="200" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="sf_pk" value="PK  id: UUID" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontStyle=4" parent="script_feedback" vertex="1">
+          <mxGeometry y="26" width="200" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="sf_fk" value="FK  script_id: UUID" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontStyle=2" parent="script_feedback" vertex="1">
+          <mxGeometry y="52" width="200" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="sf_attrs" value="counselor_name: Text&#10;role: Text&#10;rating: Integer&#10;usability_score: Integer&#10;effectiveness_score: Integer&#10;positive_points: Text&#10;improvement_suggestions: Text&#10;created_at: DateTime" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="script_feedback" vertex="1">
+          <mxGeometry y="78" width="200" height="102" as="geometry" />
+        </mxCell>
+
+        <!-- ClusterAssignment Table -->
+        <mxCell id="cluster_assignment" value="ClusterAssignment" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=1;marginBottom=0;rounded=0;shadow=0;strokeWidth=1;" parent="1" vertex="1">
+          <mxGeometry x="650" y="650" width="200" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="ca_pk" value="PK  id: UUID" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontStyle=4" parent="cluster_assignment" vertex="1">
+          <mxGeometry y="26" width="200" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="ca_fks" value="FK  vector_id: UUID&#10;FK  cluster_result_id: UUID" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontStyle=2" parent="cluster_assignment" vertex="1">
+          <mxGeometry y="52" width="200" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="ca_attrs" value="cluster_label: Integer&#10;distance_to_centroid: Float" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="cluster_assignment" vertex="1">
+          <mxGeometry y="88" width="200" height="52" as="geometry" />
+        </mxCell>
+
+        <!-- Relationships -->
+        <!-- CounselingSession -> Transcription (1:1) -->
+        <mxCell id="rel1" value="" style="endArrow=none;html=1;edgeStyle=orthogonalEdgeStyle;startArrow=ERone;endArrow=ERone;startFill=0;endFill=0;" parent="1" source="counseling_session" target="transcription" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Transcription -> TranscriptionSegment (1:M) -->
+        <mxCell id="rel2" value="" style="endArrow=none;html=1;edgeStyle=orthogonalEdgeStyle;startArrow=ERone;endArrow=ERmany;startFill=0;endFill=0;" parent="1" source="transcription" target="transcription_segment" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- CounselingSession -> SuccessConversationVector (1:M) -->
+        <mxCell id="rel3" value="" style="endArrow=none;html=1;edgeStyle=orthogonalEdgeStyle;startArrow=ERone;endArrow=ERmany;startFill=0;endFill=0;" parent="1" source="counseling_session" target="success_vector" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ClusterResult -> ImprovementScript (1:M) -->
+        <mxCell id="rel4" value="" style="endArrow=none;html=1;edgeStyle=orthogonalEdgeStyle;startArrow=ERone;endArrow=ERmany;startFill=0;endFill=0;" parent="1" source="cluster_result" target="improvement_script" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ImprovementScript -> ScriptUsageAnalytics (1:M) -->
+        <mxCell id="rel5" value="" style="endArrow=none;html=1;edgeStyle=orthogonalEdgeStyle;startArrow=ERone;endArrow=ERmany;startFill=0;endFill=0;" parent="1" source="improvement_script" target="script_analytics" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ImprovementScript -> ScriptFeedback (1:M) -->
+        <mxCell id="rel6" value="" style="endArrow=none;html=1;edgeStyle=orthogonalEdgeStyle;startArrow=ERone;endArrow=ERmany;startFill=0;endFill=0;" parent="1" source="improvement_script" target="script_feedback" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- SuccessConversationVector -> ClusterAssignment (1:M) -->
+        <mxCell id="rel7" value="" style="endArrow=none;html=1;edgeStyle=orthogonalEdgeStyle;startArrow=ERone;endArrow=ERmany;startFill=0;endFill=0;" parent="1" source="success_vector" target="cluster_assignment" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ClusterResult -> ClusterAssignment (1:M) -->
+        <mxCell id="rel8" value="" style="endArrow=none;html=1;edgeStyle=orthogonalEdgeStyle;startArrow=ERone;endArrow=ERmany;startFill=0;endFill=0;" parent="1" source="cluster_result" target="cluster_assignment" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

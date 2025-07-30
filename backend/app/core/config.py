@@ -10,9 +10,13 @@ class Settings(BaseSettings):
     
     # Database
     DATABASE_URL: str
+    VECTOR_DATABASE_URL: Optional[str] = None
     
     # API
     API_V1_PREFIX: str = "/api/v1"
+    
+    # Debug
+    DEBUG: bool = False
     
     # File Upload
     MAX_UPLOAD_SIZE: int = 500 * 1024 * 1024  # 500MB
@@ -44,5 +48,6 @@ class Settings(BaseSettings):
     
     class Config:
         env_file = ".env"
+        extra = "ignore"  # 未定義フィールドを無視
 
 settings = Settings()

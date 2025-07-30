@@ -5,8 +5,7 @@ from app.models.session import CounselingSession
 from app.models.transcription import Transcription
 from app.services.transcription.whisper_service import whisper_service
 from app.services.transcription.speaker_diarization import speaker_diarization_service
-from datetime import datetime
-import traceback
+from datetime import datetime, timezone
 
 router = APIRouter()
 
@@ -39,16 +38,27 @@ async def start_transcription(
         db.commit()
         
         # Process transcription directly (synchronous)
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         
         # Get audio file from S3 and process
-        transcription_result = await whisper_service.transcribe_audio(session_id)
-        
-        # Perform speaker diarization
-        speaker_result = await speaker_diarization_service.process(
-            transcription_result["segments"], 
+        transcription_result = whisper_service.transcribe_audio(
+            session.file_url,
             session_id
         )
+        
+        # Perform speaker diarization
+        try:
+            enhanced_segments = speaker_diarization_service.assign_speakers(
+                transcription_result["segments"]
+            )
+            # Calculate speaker statistics
+            speaker_stats = speaker_diarization_service.get_speaker_statistics(enhanced_segments)
+        except Exception as speaker_error:
+            print(f"Speaker diarization error: {speaker_error}")
+            print(f"Segments data: {transcription_result['segments']}")
+            # Use original segments without speaker assignment
+            enhanced_segments = transcription_result["segments"]
+            speaker_stats = {}
         
         # Create transcription record
         transcription = Transcription(
@@ -56,9 +66,9 @@ async def start_transcription(
             full_text=transcription_result["full_text"],
             language=transcription_result["language"],
             duration=transcription_result["duration"],
-            segments=speaker_result["segments"],
-            speaker_stats=speaker_result["speaker_stats"],
-            processing_time=(datetime.utcnow() - start_time).total_seconds(),
+            segments=enhanced_segments,
+            speaker_stats=speaker_stats,
+            processing_time=(datetime.now(timezone.utc) - start_time).total_seconds(),
             status="completed"
         )
         

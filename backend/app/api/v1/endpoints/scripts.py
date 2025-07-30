@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 import uuid
 from datetime import datetime
 
-from app.core.database import get_db
+from app.db.session import get_db
 from app.models.script import (
     ImprovementScript, 
     ScriptGenerationJob, 

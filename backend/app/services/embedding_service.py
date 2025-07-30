@@ -19,7 +19,7 @@ class EmbeddingService:
     """OpenAI text-embedding-3-small を使用したテキストベクトル化サービス"""
     
     def __init__(self):
-        self.client = AsyncOpenAI(api_key=settings.openai_api_key)
+        self.client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
         self.model = "text-embedding-3-small"
         self.encoding = tiktoken.get_encoding("cl100k_base")
         self.max_tokens = 512  # チャンク分割の最大トークン数

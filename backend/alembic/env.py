@@ -9,7 +9,7 @@ from pathlib import Path
 # Add the app directory to Python path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from app.models.database import Base
+from app.db.base import Base
 from dotenv import load_dotenv
 
 load_dotenv()

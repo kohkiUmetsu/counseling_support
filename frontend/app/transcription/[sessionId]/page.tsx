@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { TranscriptionViewer } from '@/app/components/transcription/TranscriptionViewer';
 import { ProcessingStatus } from '@/app/components/notifications/ProcessingStatus';
@@ -10,7 +10,6 @@ import {
   getTranscriptionStatus, 
   startTranscription, 
   updateTranscriptionSegment,
-  pollTaskStatus,
   TranscriptionData,
   TranscriptionStatus
 } from '@/features/services/transcription';
@@ -28,17 +27,19 @@ export default function TranscriptionPage() {
   const [error, setError] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
 
-  useEffect(() => {
-    if (!sessionId) {
-      setError('セッションIDが指定されていません');
-      setLoading(false);
-      return;
-    }
+  const fetchTranscription = useCallback(async () => {
+    if (!sessionId) return;
 
-    fetchTranscriptionStatus();
+    try {
+      const transcriptionData = await getTranscription(sessionId);
+      setTranscription(transcriptionData);
+    } catch (err) {
+      setError('文字起こしデータの読み込みに失敗しました');
+      console.error('Error fetching transcription:', err);
+    }
   }, [sessionId]);
 
-  const fetchTranscriptionStatus = async () => {
+  const fetchTranscriptionStatus = useCallback(async () => {
     if (!sessionId) return;
 
     try {
@@ -54,19 +55,17 @@ export default function TranscriptionPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [sessionId, fetchTranscription]);
 
-  const fetchTranscription = async () => {
-    if (!sessionId) return;
-
-    try {
-      const transcriptionData = await getTranscription(sessionId);
-      setTranscription(transcriptionData);
-    } catch (err) {
-      setError('文字起こしデータの読み込みに失敗しました');
-      console.error('Error fetching transcription:', err);
+  useEffect(() => {
+    if (!sessionId) {
+      setError('セッションIDが指定されていません');
+      setLoading(false);
+      return;
     }
-  };
+
+    fetchTranscriptionStatus();
+  }, [sessionId, fetchTranscriptionStatus]);
 
   const handleStartTranscription = async () => {
     if (!sessionId) return;
@@ -75,23 +74,15 @@ export default function TranscriptionPage() {
     setError(null);
 
     try {
-      const { task_id } = await startTranscription(sessionId);
+      await startTranscription(sessionId);
       
-      // Start polling task status
-      const cleanup = pollTaskStatus(task_id, (taskStatus) => {
-        // setTaskStatus(taskStatus);
-        
-        if (taskStatus.state === 'SUCCESS') {
-          fetchTranscriptionStatus();
-          cleanup();
-        } else if (taskStatus.state === 'FAILURE') {
-          setError(taskStatus.error || '文字起こしに失敗しました');
-          cleanup();
-        }
-      });
-
-      // Update local status
+      // Update local status to processing
       setStatus(prev => prev ? { ...prev, status: 'processing' } : null);
+      
+      // Refresh status after starting
+      setTimeout(() => {
+        fetchTranscriptionStatus();
+      }, 1000);
     } catch (err) {
       setError(err instanceof Error ? err.message : '文字起こしの開始に失敗しました');
     } finally {

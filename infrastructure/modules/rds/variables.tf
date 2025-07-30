@@ -18,15 +18,16 @@ variable "private_subnet_ids" {
   type        = list(string)
 }
 
+variable "public_subnet_ids" {
+  description = "List of public subnet IDs"
+  type        = list(string)
+}
+
 variable "ecs_security_group_id" {
   description = "ECS security group ID"
   type        = string
 }
 
-variable "bastion_security_group_id" {
-  description = "Bastion host security group ID"
-  type        = string
-}
 
 variable "db_instance_class" {
   description = "RDS instance class"
@@ -98,4 +99,10 @@ variable "backup_retention_period" {
   description = "Backup retention period in days"
   type        = number
   default     = 7
+}
+
+variable "allowed_cidr_blocks" {
+  description = "List of CIDR blocks allowed to access RDS"
+  type        = list(string)
+  default     = []
 }

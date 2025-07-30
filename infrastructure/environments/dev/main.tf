@@ -50,21 +50,7 @@ module "s3" {
   environment  = local.environment
 }
 
-# EC2 Bastion Host
-module "ec2" {
-  source = "../../modules/ec2"
-  
-  project_name        = local.project_name
-  environment         = local.environment
-  vpc_id             = module.vpc.vpc_id
-  public_subnet_ids  = module.vpc.public_subnet_ids
-  key_pair_name      = var.key_pair_name
-  
-  db_endpoint          = module.rds.db_instance_endpoint
-  vector_db_endpoint   = module.rds.aurora_cluster_endpoint
-  db_username         = var.db_username
-  vector_db_username  = var.vector_db_username
-}
+# EC2 Bastion Host - Removed as RDS is now publicly accessible
 
 # RDS
 module "rds" {
@@ -74,8 +60,8 @@ module "rds" {
   environment               = local.environment
   vpc_id                   = module.vpc.vpc_id
   private_subnet_ids       = module.vpc.private_subnet_ids
+  public_subnet_ids        = module.vpc.public_subnet_ids
   ecs_security_group_id    = module.ecs.ecs_security_group_id
-  bastion_security_group_id = module.ec2.bastion_security_group_id
   
   db_username        = var.db_username
   db_password        = var.db_password
@@ -86,6 +72,7 @@ module "rds" {
   db_instance_class      = "db.t3.micro"
   aurora_instance_class  = "db.t3.medium"
   backup_retention_period = 1
+  allowed_cidr_blocks    = ["0.0.0.0/0"]  # Development only - restrict in production
 }
 
 # ECS

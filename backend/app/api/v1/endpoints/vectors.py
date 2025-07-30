@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 
-from app.core.database import get_db
+from app.db.session import get_db
 from app.services.embedding_service import embedding_service
 from app.services.vector_search_service import create_vector_search_service
 from app.services.clustering_service import create_clustering_service

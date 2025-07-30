@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
-from app.models.database import Base
+from app.db.base import Base
 import os
 from dotenv import load_dotenv
 

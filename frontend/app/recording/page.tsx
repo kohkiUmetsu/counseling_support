@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { AudioRecorder } from '@/app/components/audio/AudioRecorder';
 import { Upload } from 'lucide-react';
 import { uploadAudio } from '@/repository';
@@ -11,9 +11,9 @@ export default function RecordingPage() {
     url: string;
   } | null>(null);
 
-  const handleRecordingComplete = (audioBlob: Blob, audioUrl: string) => {
+  const handleRecordingComplete = useCallback((audioBlob: Blob, audioUrl: string) => {
     setRecordedAudio({ blob: audioBlob, url: audioUrl });
-  };
+  }, []);
 
   const handleUpload = async () => {
     if (!recordedAudio) return;

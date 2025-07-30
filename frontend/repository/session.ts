@@ -2,14 +2,17 @@ import { apiClient } from './base';
 
 export interface SessionData {
   id: string;
-  fileUrl: string;
-  fileName: string;
-  fileSize: number;
-  fileType: string;
+  file_url: string;
+  file_name: string;
+  file_size: number;
+  file_type: string;
   duration?: number;
-  isSuccess?: boolean;
-  counselorName?: string;
+  is_success?: boolean;
+  counselor_name?: string;
   comment?: string;
+  transcription_status?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface UploadResponse {
@@ -56,7 +59,15 @@ export async function updateSessionLabel(
     comment?: string;
   }
 ): Promise<SessionData> {
-  const response = await apiClient.patch<SessionData>(`/sessions/${sessionId}/label`, data);
+  const payload = {
+    is_success: data.isSuccess,
+    counselor_name: data.counselorName,
+    comment: data.comment
+  };
+  
+  console.log('Sending payload:', payload);
+  
+  const response = await apiClient.patch<SessionData>(`/sessions/${sessionId}/label`, payload);
   return response.data;
 }
 
@@ -65,4 +76,11 @@ export async function getSessionAudio(sessionId: string) {
     responseType: 'blob',
   });
   return response;
+}
+
+export async function getSessions(skip: number = 0, limit: number = 100): Promise<SessionData[]> {
+  const response = await apiClient.get<SessionData[]>(`/sessions`, {
+    params: { skip, limit }
+  });
+  return response.data;
 }

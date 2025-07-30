@@ -13,7 +13,7 @@ export const SuccessFailureToggle: React.FC<SuccessFailureToggleProps> = ({
   return (
     <div className="space-y-2">
       <label className="block text-sm font-medium text-gray-700">
-        Session Outcome <span className="text-red-500">*</span>
+        セッション結果 <span className="text-red-500">*</span>
       </label>
       <div className="flex space-x-4">
         <button
@@ -26,7 +26,7 @@ export const SuccessFailureToggle: React.FC<SuccessFailureToggleProps> = ({
           }`}
         >
           <ThumbsUp size={20} />
-          <span className="font-medium">Success</span>
+          <span className="font-medium">成功</span>
         </button>
         
         <button
@@ -39,7 +39,7 @@ export const SuccessFailureToggle: React.FC<SuccessFailureToggleProps> = ({
           }`}
         >
           <ThumbsDown size={20} />
-          <span className="font-medium">Failure</span>
+          <span className="font-medium">失敗</span>
         </button>
       </div>
     </div>

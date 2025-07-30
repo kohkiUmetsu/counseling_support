@@ -1,6 +1,6 @@
 resource "aws_db_subnet_group" "main" {
   name       = "${var.project_name}-${var.environment}-db-subnet-group"
-  subnet_ids = var.private_subnet_ids
+  subnet_ids = var.public_subnet_ids
 
   tags = {
     Name        = "${var.project_name}-${var.environment}-db-subnet-group"
@@ -19,12 +19,14 @@ resource "aws_security_group" "rds" {
     security_groups = [var.ecs_security_group_id]
   }
 
-  # Allow access from bastion host
+
+  # Allow direct access for development (restrict to specific IPs in production)
   ingress {
-    from_port       = 5432
-    to_port         = 5432
-    protocol        = "tcp"
-    security_groups = [var.bastion_security_group_id]
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
+    cidr_blocks = var.environment == "dev" ? ["0.0.0.0/0"] : var.allowed_cidr_blocks
+    description = "Direct PostgreSQL access for development"
   }
 
   egress {
@@ -56,6 +58,9 @@ resource "aws_db_instance" "main" {
   vpc_security_group_ids = [aws_security_group.rds.id]
   db_subnet_group_name   = aws_db_subnet_group.main.name
   
+  # Enable public access for development
+  publicly_accessible = var.environment == "dev" ? true : false
+  
   backup_retention_period = var.backup_retention_period
   backup_window          = "03:00-04:00"
   maintenance_window     = "sun:04:00-sun:05:00"
@@ -81,8 +86,9 @@ resource "aws_rds_cluster" "aurora_vector" {
   vpc_security_group_ids = [aws_security_group.rds.id]
   db_subnet_group_name   = aws_db_subnet_group.main.name
   
+  
   backup_retention_period = var.backup_retention_period
-  preferred_backup_window = "03:00-04:00"
+  preferred_backup_window = "03:00-04:00" 
   preferred_maintenance_window = "sun:04:00-sun:05:00"
   
   skip_final_snapshot = var.environment != "prod"
@@ -101,6 +107,9 @@ resource "aws_rds_cluster_instance" "aurora_vector_instances" {
   instance_class     = var.aurora_instance_class
   engine             = aws_rds_cluster.aurora_vector.engine
   engine_version     = aws_rds_cluster.aurora_vector.engine_version
+  
+  # Enable public access for development
+  publicly_accessible = var.environment == "dev" ? true : false
 
   tags = {
     Name        = "${var.project_name}-${var.environment}-aurora-vector-${count.index}"

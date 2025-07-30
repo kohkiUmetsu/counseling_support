@@ -49,7 +49,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isRecording, isPaused, maxDuration, stopRecording]);
+  }, [isRecording, isPaused, maxDuration]);
 
   useEffect(() => {
     if (!isRecording) {

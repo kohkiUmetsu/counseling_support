@@ -89,13 +89,15 @@ async def update_session_label(
     
     # Update label data
     db_session.is_success = label_data.is_success
-    db_session.counselor_name = label_data.counselor_name
+    if label_data.counselor_name:
+        db_session.counselor_name = label_data.counselor_name
     if label_data.comment:
         db_session.comment = label_data.comment
     
     db.commit()
+    db.refresh(db_session)
     
-    return {"message": "Label updated successfully"}
+    return db_session
 
 @router.get("/{session_id}")
 async def get_session(
@@ -110,3 +112,12 @@ async def get_session(
         raise HTTPException(status_code=404, detail="Session not found")
     
     return db_session
+
+@router.get("/")
+async def get_sessions(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db)
+):
+    sessions = db.query(CounselingSession).offset(skip).limit(limit).all()
+    return sessions

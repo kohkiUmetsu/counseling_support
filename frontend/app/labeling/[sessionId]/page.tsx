@@ -7,6 +7,9 @@ import { AudioPlayer } from '@/app/components/audio/AudioPlayer';
 import { getSession } from '@/repository';
 import { SessionData } from '@/repository';
 import { LoadingSpinner } from '@/app/components/ui/LoadingSpinner';
+import { getTranscriptionStatus, getTranscription } from '@/features/services/transcription';
+import { TranscriptionViewer } from '@/app/components/transcription/TranscriptionViewer';
+import { CheckCircle2 } from 'lucide-react';
 
 
 export default function LabelingPage() {
@@ -17,6 +20,8 @@ export default function LabelingPage() {
   const [session, setSession] = useState<SessionData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [transcriptionData, setTranscriptionData] = useState<any>(null);
+  const [transcriptionStatus, setTranscriptionStatus] = useState<any>(null);
 
   useEffect(() => {
     if (!sessionId) {
@@ -32,6 +37,19 @@ export default function LabelingPage() {
     try {
       const data = await getSession(sessionId);
       setSession(data);
+      
+      // 文字起こし状態もチェック
+      try {
+        const status = await getTranscriptionStatus(sessionId);
+        setTranscriptionStatus(status);
+        
+        if (status.status === 'completed' && status.transcription_id) {
+          const transcription = await getTranscription(sessionId);
+          setTranscriptionData(transcription);
+        }
+      } catch (err) {
+        console.log('文字起こしデータはまだありません');
+      }
     } catch (err) {
       setError('セッションデータの読み込みに失敗しました');
       console.error('Error fetching session:', err);
@@ -61,7 +79,7 @@ export default function LabelingPage() {
   }
 
   // Create blob from file URL for audio player
-  const audioBlob = new Blob([], { type: session.fileType });
+  const audioBlob = new Blob([], { type: session.file_type });
   
   return (
     <div className="max-w-6xl mx-auto">
@@ -74,32 +92,59 @@ export default function LabelingPage() {
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-8">
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold mb-4">セッション音声</h2>
-          <div className="space-y-4">
-            <div className="text-sm text-gray-600">
-              <p><strong>ファイル名:</strong> {session.fileName}</p>
-              <p><strong>サイズ:</strong> {(session.fileSize / 1024 / 1024).toFixed(2)} MB</p>
-              {session.duration && (
-                <p><strong>長さ:</strong> {Math.floor(session.duration / 60)}:{Math.floor(session.duration % 60).toString().padStart(2, '0')}</p>
-              )}
+      {/* 文字起こし完了時は結果を表示 */}
+      {transcriptionData && transcriptionStatus?.status === 'completed' ? (
+        <div className="space-y-6">
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center space-x-3">
+            <CheckCircle2 className="h-5 w-5 text-green-600" />
+            <div>
+              <h3 className="font-semibold text-green-800">文字起こし完了</h3>
+              <p className="text-sm text-green-600">
+                処理時間: {transcriptionStatus.processing_time?.toFixed(1)}秒 | 
+                言語: {transcriptionStatus.language} | 
+                長さ: {transcriptionStatus.duration ? `${Math.floor(transcriptionStatus.duration / 60)}:${Math.floor(transcriptionStatus.duration % 60).toString().padStart(2, '0')}` : '不明'}
+              </p>
             </div>
-            
-            <AudioPlayer
-              audioUrl={session.fileUrl}
-              audioBlob={audioBlob}
+          </div>
+
+          <TranscriptionViewer
+            transcriptionId={transcriptionData.transcription_id}
+            sessionId={transcriptionData.session_id}
+            fullText={transcriptionData.full_text}
+            segments={transcriptionData.segments}
+            audioUrl={session.file_url}
+            onSegmentUpdate={() => {}}
+            isEditable={false}
+          />
+        </div>
+      ) : (
+        <div className="grid md:grid-cols-2 gap-8">
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold mb-4">セッション音声</h2>
+            <div className="space-y-4">
+              <div className="text-sm text-gray-600">
+                <p><strong>ファイル名:</strong> {session.file_name}</p>
+                <p><strong>サイズ:</strong> {(session.file_size / 1024 / 1024).toFixed(2)} MB</p>
+                {session.duration && (
+                  <p><strong>長さ:</strong> {Math.floor(session.duration / 60)}:{Math.floor(session.duration % 60).toString().padStart(2, '0')}</p>
+                )}
+              </div>
+              
+              <AudioPlayer
+                audioUrl={session.file_url}
+                audioBlob={audioBlob}
+              />
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <LabelingForm
+              sessionId={sessionId}
+              onComplete={handleLabelingComplete}
             />
           </div>
         </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <LabelingForm
-            sessionId={sessionId}
-            onComplete={handleLabelingComplete}
-          />
-        </div>
-      </div>
+      )}
     </div>
   );
 }

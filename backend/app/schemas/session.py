@@ -14,7 +14,7 @@ class SessionUploadResponse(BaseModel):
 
 class SessionLabelUpdate(BaseModel):
     is_success: bool = Field(alias="isSuccess")
-    counselor_name: str = Field(alias="counselorName")
+    counselor_name: Optional[str] = Field(alias="counselorName")
     comment: Optional[str] = None
     
     class Config:

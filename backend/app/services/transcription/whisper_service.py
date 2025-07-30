@@ -2,8 +2,8 @@ import openai
 from typing import List, Dict, Optional
 import tempfile
 import os
-from datetime import datetime
-import requests
+from datetime import datetime, timezone
+import httpx
 from app.core.config import settings
 
 class WhisperService:
@@ -37,7 +37,6 @@ class WhisperService:
                         model="whisper-1",
                         file=audio_file,
                         response_format="verbose_json",
-                        timestamp_granularities=["segment"] if enable_timestamps else None,
                         language=language
                     )
                 
@@ -52,14 +51,23 @@ class WhisperService:
                 
                 # Process segments with timestamps
                 if hasattr(response, 'segments') and response.segments:
-                    for segment in response.segments:
+                    for i, segment in enumerate(response.segments):
                         transcription_result["segments"].append({
-                            "id": segment.id,
-                            "start": segment.start,
-                            "end": segment.end,
-                            "text": segment.text.strip(),
+                            "id": i,
+                            "start": getattr(segment, 'start', 0),
+                            "end": getattr(segment, 'end', 0),
+                            "text": getattr(segment, 'text', '').strip(),
                             "speaker": None  # Will be filled by speaker diarization
                         })
+                else:
+                    # If no segments available, create a single segment with full text
+                    transcription_result["segments"].append({
+                        "id": 0,
+                        "start": 0,
+                        "end": transcription_result.get("duration", 0) or 0,
+                        "text": response.text.strip(),
+                        "speaker": None
+                    })
                 
                 return transcription_result
                 
@@ -76,9 +84,10 @@ class WhisperService:
         Download audio file from S3 URL
         """
         try:
-            response = requests.get(audio_url, timeout=300)  # 5 minutes timeout
-            response.raise_for_status()
-            return response.content
+            with httpx.Client(timeout=300.0) as client:  # 5 minutes timeout
+                response = client.get(audio_url)
+                response.raise_for_status()
+                return response.content
         except Exception as e:
             raise Exception(f"Failed to download audio file: {str(e)}")
 
