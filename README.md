@@ -40,6 +40,15 @@ docker-compose up -d
 # PgVector DB (localhost:5433)
 ```
 
+###　バックエンドサーバー起動
+- uvicorn main:app --reload
+
+### メインDBマイグレーション実行
+- source .venv/bin/activate && python -m alembic upgrade head
+
+### ベクトルDBマイグレーション実行
+- source .venv/bin/activate && python -m alembic -c alembic_vector.ini upgrade head
+
 ### APIドキュメント
 バックエンド起動後、以下のURLでAPIドキュメントを確認できます：
 - Swagger UI: http://localhost:8000/docs

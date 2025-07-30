@@ -1,4 +1,5 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from typing import Optional
 import uuid
@@ -121,3 +122,31 @@ async def get_sessions(
 ):
     sessions = db.query(CounselingSession).offset(skip).limit(limit).all()
     return sessions
+
+@router.get("/{session_id}/audio")
+async def get_session_audio(
+    session_id: str,
+    db: Session = Depends(get_db)
+):
+    # Find session
+    db_session = db.query(CounselingSession).filter(
+        CounselingSession.id == session_id
+    ).first()
+    
+    if not db_session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    if not db_session.file_url:
+        raise HTTPException(status_code=404, detail="Audio file not found")
+    
+    try:
+        # Get audio file from S3
+        audio_stream = s3_service.get_audio_file_stream(db_session.file_url)
+        
+        return StreamingResponse(
+            audio_stream,
+            media_type=db_session.file_type or "audio/mpeg",
+            headers={"Content-Disposition": f"inline; filename={db_session.file_name}"}
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve audio file: {str(e)}")

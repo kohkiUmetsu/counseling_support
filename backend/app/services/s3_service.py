@@ -1,9 +1,10 @@
 import boto3
 from botocore.exceptions import ClientError
-from typing import BinaryIO, Optional
+from typing import BinaryIO, Optional, Iterator
 import uuid
 from datetime import datetime
 from app.core.config import settings
+import io
 
 class S3Service:
     def __init__(self):
@@ -90,5 +91,26 @@ class S3Service:
         except ClientError as e:
             print(f"Failed to generate presigned URL: {str(e)}")
             return None
+
+    def get_audio_file_stream(self, file_url: str) -> Iterator[bytes]:
+        """
+        Stream audio file from S3
+        """
+        try:
+            # Extract S3 key from URL
+            s3_key = file_url.split(f"{self.bucket_name}.s3.{settings.AWS_REGION}.amazonaws.com/")[-1]
+            
+            # Get object from S3
+            response = self.s3_client.get_object(
+                Bucket=self.bucket_name,
+                Key=s3_key
+            )
+            
+            # Stream the file content
+            for chunk in response['Body'].iter_chunks(chunk_size=8192):
+                yield chunk
+                
+        except ClientError as e:
+            raise Exception(f"Failed to stream file from S3: {str(e)}")
 
 s3_service = S3Service()

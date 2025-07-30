@@ -2,11 +2,12 @@ from sqlalchemy import Column, String, Integer, Float, Boolean, DateTime, Text, 
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.db.base_class import Base
+import uuid
 
 class Transcription(Base):
     __tablename__ = "transcriptions"
     
-    id = Column(String(36), primary_key=True)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     session_id = Column(String(36), ForeignKey("counseling_sessions.id"), nullable=False)
     
     # Full transcription text
@@ -40,7 +41,7 @@ class Transcription(Base):
 class TranscriptionSegment(Base):
     __tablename__ = "transcription_segments"
     
-    id = Column(String(36), primary_key=True)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     transcription_id = Column(String(36), ForeignKey("transcriptions.id"), nullable=False)
     
     # Segment details
