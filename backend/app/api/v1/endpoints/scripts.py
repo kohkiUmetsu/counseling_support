@@ -26,8 +26,6 @@ router = APIRouter()
 
 # Pydanticモデル
 class ScriptGenerationRequest(BaseModel):
-    cluster_result_id: str = Field(..., description="クラスタリング結果ID")
-    failure_conversations: List[Dict[str, Any]] = Field(default=[], description="分析対象失敗会話")
     title: Optional[str] = Field(default=None, description="スクリプトタイトル")
     description: Optional[str] = Field(default=None, description="スクリプト説明")
 
@@ -72,8 +70,6 @@ async def generate_script(
         generation_job = ScriptGenerationJob(
             job_id=job_id,
             input_data={
-                "cluster_result_id": request.cluster_result_id,
-                "failure_conversations": request.failure_conversations,
                 "title": request.title,
                 "description": request.description
             },
@@ -505,12 +501,43 @@ async def execute_script_generation(
         job.progress_percentage = 10
         db.commit()
         
+        # 最新データでクラスタリングを実行
+        from app.db.session import VectorSessionLocal
+        from app.models.vector import ClusterResult, SuccessConversationVector
+        from app.services.clustering_service import ClusteringService
+        
+        vector_db = VectorSessionLocal()
+        try:
+            # 利用可能なベクトルデータを確認
+            vector_count = vector_db.query(SuccessConversationVector).count()
+            
+            if vector_count < 5:  # 最小クラスタリング要件
+                job.status = "failed"
+                job.error_message = f"クラスタリングに必要な最小データ数が不足しています（現在: {vector_count}件、必要: 5件以上）"
+                job.completed_at = datetime.utcnow()
+                db.commit()
+                return
+            
+            # クラスタリング実行
+            clustering_service = ClusteringService(vector_db)
+            cluster_result = await clustering_service.perform_clustering(
+                algorithm="kmeans",
+                min_clusters=2,
+                max_clusters=min(10, vector_count // 2)
+            )
+            
+            cluster_result_id = str(cluster_result["cluster_result_id"])
+            job.progress_percentage = 20
+            db.commit()
+            
+        finally:
+            vector_db.close()
+        
         # スクリプト生成サービス実行
         generation_service = create_script_generation_service(db)
         
         analysis_data = {
-            "cluster_result_id": request_data["cluster_result_id"],
-            "failure_conversations": request_data["failure_conversations"]
+            "cluster_result_id": cluster_result_id
         }
         
         job.progress_percentage = 30
@@ -532,11 +559,8 @@ async def execute_script_generation(
             content=result["script"],
             generation_metadata=result["generation_metadata"],
             quality_metrics=result["quality_metrics"],
-            cluster_result_id=request_data["cluster_result_id"],
-            based_on_failure_sessions=[
-                fc.get("session_id") for fc in request_data["failure_conversations"] 
-                if fc.get("session_id")
-            ],
+            cluster_result_id=cluster_result_id,
+            based_on_failure_sessions=[],
             status="review"
         )
         

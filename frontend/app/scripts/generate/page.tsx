@@ -65,11 +65,7 @@ export default function ScriptGeneratePage() {
     setCurrentJob(null);
 
     try {
-      // For demo purposes, we'll use a dummy cluster result ID
-      // In a real implementation, this would come from the clustering process
       const request = {
-        cluster_result_id: '00000000-0000-0000-0000-000000000000', // Dummy ID
-        failure_conversations: [], // This would be populated from actual failure data
         title: `改善スクリプト ${new Date().toLocaleDateString()}`,
         description: 'AI生成による改善スクリプト'
       };

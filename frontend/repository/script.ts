@@ -1,12 +1,6 @@
 import { apiClient } from './base';
 
 export interface ScriptGenerationRequest {
-  cluster_result_id: string;
-  failure_conversations: Array<{
-    session_id?: string;
-    conversation?: string;
-    [key: string]: any;
-  }>;
   title?: string;
   description?: string;
 }
@@ -55,19 +49,19 @@ export interface ImprovementScript {
 export const startScriptGeneration = async (
   request: ScriptGenerationRequest
 ): Promise<ScriptGenerationResponse> => {
-  const response = await apiClient.post('/scripts/generate', request);
+  const response = await apiClient.post<ScriptGenerationResponse>('/scripts/generate', request);
   return response.data;
 };
 
 export const getScriptGenerationStatus = async (
   jobId: string
 ): Promise<ScriptGenerationStatus> => {
-  const response = await apiClient.get(`/scripts/generate/${jobId}/status`);
+  const response = await apiClient.get<ScriptGenerationStatus>(`/scripts/generate/${jobId}/status`);
   return response.data;
 };
 
 export const getScript = async (scriptId: string): Promise<ImprovementScript> => {
-  const response = await apiClient.get(`/scripts/${scriptId}`);
+  const response = await apiClient.get<ImprovementScript>(`/scripts/${scriptId}`);
   return response.data;
 };
 
@@ -77,7 +71,7 @@ export const getScripts = async (params?: {
   status?: string;
   is_active?: boolean;
 }): Promise<ImprovementScript[]> => {
-  const response = await apiClient.get('/scripts/', { params });
+  const response = await apiClient.get<ImprovementScript[]>('/scripts/', { params });
   return response.data;
 };
 
@@ -90,16 +84,16 @@ export const updateScript = async (
     status?: string;
   }
 ): Promise<ImprovementScript> => {
-  const response = await apiClient.patch(`/scripts/${scriptId}`, updates);
+  const response = await apiClient.patch<ImprovementScript>(`/scripts/${scriptId}`, updates);
   return response.data;
 };
 
 export const activateScript = async (scriptId: string): Promise<ImprovementScript> => {
-  const response = await apiClient.post(`/scripts/${scriptId}/activate`);
+  const response = await apiClient.post<ImprovementScript>(`/scripts/${scriptId}/activate`);
   return response.data;
 };
 
 export const deactivateScript = async (scriptId: string): Promise<ImprovementScript> => {
-  const response = await apiClient.post(`/scripts/${scriptId}/deactivate`);
+  const response = await apiClient.post<ImprovementScript>(`/scripts/${scriptId}/deactivate`);
   return response.data;
 };
