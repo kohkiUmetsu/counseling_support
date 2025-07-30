@@ -16,7 +16,6 @@ from app.models.vector import (
     ClusterRepresentative,
     AnomalyDetectionResult
 )
-from app.models.session import CounselingSession
 from app.services.embedding_service import embedding_service
 
 
@@ -141,12 +140,9 @@ class RepresentativeExtractionService:
         # クラスタ内のベクトルを取得
         cluster_vectors = self.db.query(
             ClusterAssignment,
-            SuccessConversationVector,
-            CounselingSession
+            SuccessConversationVector
         ).join(
             SuccessConversationVector, ClusterAssignment.vector_id == SuccessConversationVector.id
-        ).join(
-            CounselingSession, SuccessConversationVector.session_id == CounselingSession.id
         ).filter(
             ClusterAssignment.cluster_result_id == cluster_result_id,
             ClusterAssignment.cluster_label == cluster_label
@@ -157,10 +153,9 @@ class RepresentativeExtractionService:
         
         # 品質スコアを計算
         candidates = []
-        for assignment, vector, session in cluster_vectors:
+        for assignment, vector in cluster_vectors:
             quality_score = await self._calculate_quality_score(
                 vector=vector,
-                session=session,
                 distance_to_centroid=assignment.distance_to_centroid
             )
             
@@ -171,13 +166,12 @@ class RepresentativeExtractionService:
                     'distance_to_centroid': assignment.distance_to_centroid or 0.0,
                     'text': vector.chunk_text,
                     'session_info': {
-                        'session_id': str(session.id),
-                        'counselor_name': session.counselor_name,
-                        'created_at': session.created_at,
-                        'is_success': session.is_success
+                        'session_id': vector.session_id,
+                        'counselor_name': vector.counselor_name,
+                        'created_at': vector.created_at,
+                        'is_success': vector.is_success
                     },
-                    'vector': vector,
-                    'session': session
+                    'vector': vector
                 })
         
         # 品質スコア順にソートして上位を選択
@@ -193,14 +187,12 @@ class RepresentativeExtractionService:
         # 不要なオブジェクトを削除（シリアライゼーション用）
         for rep in selected_representatives:
             del rep['vector']
-            del rep['session']
         
         return selected_representatives
     
     async def _calculate_quality_score(
         self,
         vector: SuccessConversationVector,
-        session: CounselingSession,
         distance_to_centroid: Optional[float]
     ) -> float:
         """代表例の品質スコアを算出"""
@@ -215,8 +207,8 @@ class RepresentativeExtractionService:
         else:
             score_components['centroid_proximity'] = 0.5  # デフォルト
         
-        # 2. 成約率スコア（セッションが成功の場合は満点）
-        success_score = 1.0 if session.is_success else 0.0
+        # 2. 成約率スコア（ベクトルが成功の場合は満点）
+        success_score = 1.0 if vector.is_success else 0.0
         score_components['success_rate'] = success_score
         
         # 3. テキスト長さスコア（適切な長さ）
@@ -398,78 +390,48 @@ class RepresentativeExtractionService:
             網羅性と品質を両立した代表例リスト
         """
         
-        # 各クラスタの主要代表例を取得
-        primary_representatives = self.db.query(
-            ClusterRepresentative,
-            SuccessConversationVector,
-            CounselingSession
+        # Temporary workaround: Use cluster assignments to get representatives
+        # Get cluster assignments with vectors for this cluster result
+        cluster_assignments = self.db.query(
+            ClusterAssignment,
+            SuccessConversationVector
         ).join(
-            SuccessConversationVector, ClusterRepresentative.vector_id == SuccessConversationVector.id
-        ).join(
-            CounselingSession, SuccessConversationVector.session_id == CounselingSession.id
+            SuccessConversationVector, ClusterAssignment.vector_id == SuccessConversationVector.id
         ).filter(
-            ClusterRepresentative.cluster_result_id == cluster_result_id,
-            ClusterRepresentative.is_primary == True
+            ClusterAssignment.cluster_result_id == cluster_result_id
         ).order_by(
-            ClusterRepresentative.quality_score.desc()
+            ClusterAssignment.distance_to_centroid.asc()  # Closer to centroid = more representative
         ).all()
         
-        # 網羅性を確保：各クラスタから最低1つずつ選出
+        # Group by cluster and select best representatives
+        cluster_groups = {}
+        for assignment, vector in cluster_assignments:
+            if assignment.cluster_label not in cluster_groups:
+                cluster_groups[assignment.cluster_label] = []
+            cluster_groups[assignment.cluster_label].append((assignment, vector))
+        
+        # Select representatives from each cluster
         selected_representatives = []
-        covered_clusters = set()
-        
-        # まず主要代表例から各クラスタ1つずつ
-        for rep, vector, session in primary_representatives:
-            if rep.cluster_label not in covered_clusters:
+        for cluster_label, group in cluster_groups.items():
+            # Take the most representative (closest to centroid) from each cluster
+            if group:
+                assignment, vector = group[0]  # Already sorted by distance
                 selected_representatives.append({
-                    'cluster_label': rep.cluster_label,
+                    'cluster_label': cluster_label,
                     'vector_id': str(vector.id),
                     'text': vector.chunk_text,
-                    'quality_score': rep.quality_score,
+                    'quality_score': 1.0 - (assignment.distance_to_centroid or 0.5),  # Convert distance to quality
                     'session_info': {
-                        'counselor_name': session.counselor_name,
-                        'created_at': session.created_at
+                        'counselor_name': vector.counselor_name,
+                        'created_at': vector.created_at
                     },
                     'cluster_characteristics': await self._analyze_cluster_characteristics(
-                        cluster_result_id, rep.cluster_label
-                    )
-                })
-                covered_clusters.add(rep.cluster_label)
-        
-        # 残り枠で高品質な追加代表例を選出
-        remaining_slots = max_total_representatives - len(selected_representatives)
-        if remaining_slots > 0:
-            additional_reps = self.db.query(
-                ClusterRepresentative,
-                SuccessConversationVector,
-                CounselingSession
-            ).join(
-                SuccessConversationVector, ClusterRepresentative.vector_id == SuccessConversationVector.id
-            ).join(
-                CounselingSession, SuccessConversationVector.session_id == CounselingSession.id
-            ).filter(
-                ClusterRepresentative.cluster_result_id == cluster_result_id,
-                ClusterRepresentative.is_primary == False
-            ).order_by(
-                ClusterRepresentative.quality_score.desc()
-            ).limit(remaining_slots).all()
-            
-            for rep, vector, session in additional_reps:
-                selected_representatives.append({
-                    'cluster_label': rep.cluster_label,
-                    'vector_id': str(vector.id),
-                    'text': vector.chunk_text,
-                    'quality_score': rep.quality_score,
-                    'session_info': {
-                        'counselor_name': session.counselor_name,
-                        'created_at': session.created_at
-                    },
-                    'cluster_characteristics': await self._analyze_cluster_characteristics(
-                        cluster_result_id, rep.cluster_label
+                        cluster_result_id, cluster_label
                     )
                 })
         
-        return selected_representatives
+        # Limit to max_total_representatives
+        return selected_representatives[:max_total_representatives]
     
     async def _analyze_cluster_characteristics(
         self,

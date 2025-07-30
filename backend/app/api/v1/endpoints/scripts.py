@@ -9,9 +9,9 @@ import uuid
 from datetime import datetime
 
 from app.db.session import get_db
+from app.core.database import get_vector_database as get_vector_db
 from app.models.script import (
     ImprovementScript, 
-    ScriptGenerationJob, 
     ScriptUsageAnalytics,
     ScriptFeedback,
     ScriptPerformanceMetrics
@@ -64,32 +64,32 @@ async def generate_script(
 ):
     """スクリプト生成を開始"""
     try:
-        job_id = f"script_gen_{uuid.uuid4().hex[:8]}"
+        script_id = str(uuid.uuid4())
         
-        # ジョブレコード作成
-        generation_job = ScriptGenerationJob(
-            job_id=job_id,
-            input_data={
-                "title": request.title,
-                "description": request.description
-            },
-            status="pending"
+        # 直接ImprovementScriptレコードを作成
+        improvement_script = ImprovementScript(
+            id=script_id,
+            version="v1.0.0",
+            title=request.title or "AI生成スクリプト",
+            description=request.description or "AI生成による改善スクリプト",
+            content={},  # 生成処理で更新
+            status="generating"
         )
         
-        db.add(generation_job)
+        db.add(improvement_script)
         db.commit()
         
         # バックグラウンドで生成処理を実行
         background_tasks.add_task(
             execute_script_generation,
-            job_id,
+            script_id,
             request.dict(),
             db
         )
         
         return ScriptGenerationResponse(
-            job_id=job_id,
-            status="pending",
+            job_id=script_id,
+            status="generating",
             message="スクリプト生成を開始しました"
         )
         
@@ -104,39 +104,35 @@ async def get_generation_status(
 ):
     """スクリプト生成状況確認"""
     try:
-        job = db.query(ScriptGenerationJob).filter(
-            ScriptGenerationJob.job_id == job_id
+        script = db.query(ImprovementScript).filter(
+            ImprovementScript.id == job_id
         ).first()
         
-        if not job:
-            raise HTTPException(status_code=404, detail="ジョブが見つかりません")
+        if not script:
+            raise HTTPException(status_code=404, detail="スクリプトが見つかりません")
         
         response = {
             "job_id": job_id,
-            "status": job.status,
-            "progress_percentage": job.progress_percentage,
-            "created_at": job.created_at,
-            "started_at": job.started_at,
-            "completed_at": job.completed_at
+            "status": script.status,
+            "progress_percentage": 100 if script.status == "completed" else 50 if script.status == "generating" else 0,
+            "created_at": script.created_at,
+            "started_at": script.created_at,
+            "completed_at": script.updated_at if script.status == "completed" else None
         }
         
-        if job.status == "completed" and job.result_script_id:
+        if script.status == "completed":
             # 完了時は生成されたスクリプト情報も返却
-            script = db.query(ImprovementScript).filter(
-                ImprovementScript.id == job.result_script_id
-            ).first()
             
-            if script:
-                response["script"] = {
-                    "id": str(script.id),
-                    "title": script.title,
-                    "version": script.version,
-                    "status": script.status,
-                    "quality_metrics": script.quality_metrics
-                }
+            response["script"] = {
+                "id": str(script.id),
+                "title": script.title,
+                "version": script.version,
+                "status": script.status,
+                "quality_metrics": script.quality_metrics
+            }
         
-        elif job.status == "failed":
-            response["error_message"] = job.error_message
+        elif script.status == "failed":
+            response["error_message"] = "生成に失敗しました"
         
         return response
         
@@ -195,6 +191,22 @@ async def get_script(
 ):
     """特定スクリプト取得"""
     try:
+        # UUIDフォーマットの検証
+        try:
+            import uuid
+            uuid.UUID(script_id)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="無効なスクリプトIDフォーマットです")
+        
+        # Connection timeout handling
+        from sqlalchemy import text
+        try:
+            # Test connection with timeout
+            db.execute(text("SELECT 1"))
+            db.commit()
+        except Exception as conn_error:
+            raise HTTPException(status_code=503, detail="データベース接続エラー")
+        
         script = db.query(ImprovementScript).filter(
             ImprovementScript.id == script_id
         ).first()
@@ -217,7 +229,12 @@ async def get_script(
             "activated_at": script.activated_at
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
+        # More specific error handling for timeouts
+        if "timeout" in str(e).lower() or "timed out" in str(e).lower():
+            raise HTTPException(status_code=504, detail="データベースクエリがタイムアウトしました")
         raise HTTPException(status_code=500, detail=f"スクリプト取得エラー: {str(e)}")
 
 
@@ -479,116 +496,130 @@ async def delete_script(
 
 # バックグラウンドタスク
 async def execute_script_generation(
-    job_id: str,
+    script_id: str,
     request_data: Dict[str, Any],
     db: Session
 ):
     """スクリプト生成をバックグラウンドで実行"""
+    import logging
+    logger = logging.getLogger(__name__)
+    
     try:
         import asyncio
         from datetime import datetime
         
-        # ジョブ開始
-        job = db.query(ScriptGenerationJob).filter(
-            ScriptGenerationJob.job_id == job_id
+        logger.info(f"🚀 Starting script generation for script_id: {script_id}")
+        logger.info(f"📋 Request data: {request_data}")
+        
+        # スクリプト開始
+        script = db.query(ImprovementScript).filter(
+            ImprovementScript.id == script_id
         ).first()
         
-        if not job:
+        if not script:
+            logger.error(f"❌ Script {script_id} not found in database")
             return
         
-        job.status = "running"
-        job.started_at = datetime.utcnow()
-        job.progress_percentage = 10
+        logger.info(f"✅ Script found: {script.title}")
+        script.status = "generating"
+        script.updated_at = datetime.utcnow()
         db.commit()
+        logger.info(f"📊 Script status updated to 'generating'")
         
         # 最新データでクラスタリングを実行
+        logger.info(f"🔄 Starting clustering process")
         from app.db.session import VectorSessionLocal
         from app.models.vector import ClusterResult, SuccessConversationVector
         from app.services.clustering_service import ClusteringService
         
         vector_db = VectorSessionLocal()
         try:
+            logger.info(f"📊 Connected to vector database")
             # 利用可能なベクトルデータを確認
             vector_count = vector_db.query(SuccessConversationVector).count()
+            logger.info(f"📈 Found {vector_count} vectors in database")
             
             if vector_count < 5:  # 最小クラスタリング要件
-                job.status = "failed"
-                job.error_message = f"クラスタリングに必要な最小データ数が不足しています（現在: {vector_count}件、必要: 5件以上）"
-                job.completed_at = datetime.utcnow()
+                logger.error(f"❌ Insufficient data for clustering: {vector_count} vectors (minimum: 5)")
+                script.status = "failed"
+                script.updated_at = datetime.utcnow()
                 db.commit()
                 return
             
             # クラスタリング実行
+            logger.info(f"🎯 Starting clustering with {vector_count} vectors")
             clustering_service = ClusteringService(vector_db)
             cluster_result = await clustering_service.perform_clustering(
                 algorithm="kmeans",
-                min_clusters=2,
-                max_clusters=min(10, vector_count // 2)
+                k_range=(2, min(10, vector_count // 2)),
+                auto_select_k=True
             )
             
             cluster_result_id = str(cluster_result["cluster_result_id"])
-            job.progress_percentage = 20
+            logger.info(f"✅ Clustering completed with ID: {cluster_result_id}")
             db.commit()
             
         finally:
             vector_db.close()
         
         # スクリプト生成サービス実行
-        generation_service = create_script_generation_service(db)
+        logger.info(f"🤖 Starting script generation service")
+        # 新しいベクトルDBセッションを作成
+        vector_db_for_generation = next(get_vector_db())
+        generation_service = create_script_generation_service(db, vector_db_for_generation)
         
         analysis_data = {
             "cluster_result_id": cluster_result_id
         }
         
-        job.progress_percentage = 30
-        db.commit()
+        logger.info(f"📊 Analysis data prepared: {analysis_data}")
         
         # 生成実行
+        logger.info(f"🎯 Executing script generation")
         result = await generation_service.generate_improvement_script(
             analysis_data=analysis_data
         )
         
-        job.progress_percentage = 80
+        logger.info(f"✅ Script generation completed")
+        logger.info(f"📋 Result keys: {list(result.keys()) if result else 'None'}")
+        
+        # スクリプト内容を更新
+        script.content = result.get("script", {})
+        script.generation_metadata = result.get("generation_metadata", {})
+        script.quality_metrics = result.get("quality_metrics", {})
+        script.cluster_result_id = cluster_result_id
+        script.based_on_failure_sessions = []
+        script.status = "review"
+        
+        logger.info(f"💾 Saving script to database")
         db.commit()
         
-        # スクリプト保存
-        script = ImprovementScript(
-            title=request_data.get("title", f"改善スクリプト {datetime.utcnow().strftime('%Y%m%d_%H%M')}"),
-            description=request_data.get("description"),
-            version="1.0.0",
-            content=result["script"],
-            generation_metadata=result["generation_metadata"],
-            quality_metrics=result["quality_metrics"],
-            cluster_result_id=cluster_result_id,
-            based_on_failure_sessions=[],
-            status="review"
-        )
+        # ベクトルDBセッションをクローズ
+        vector_db_for_generation.close()
         
-        db.add(script)
-        db.commit()
+        # スクリプト完了
+        script.status = "completed"
+        script.updated_at = datetime.utcnow()
         
-        # ジョブ完了
-        job.status = "completed"
-        job.completed_at = datetime.utcnow()
-        job.progress_percentage = 100
-        job.result_script_id = script.id
-        job.token_usage = result["generation_metadata"].get("openai_usage")
-        job.cost_estimate = result["generation_metadata"].get("cost_estimate")
-        job.processing_time = result["generation_metadata"].get("processing_time")
-        
+        logger.info(f"🎉 Script generation completed successfully for {script_id}")
         db.commit()
         
     except Exception as e:
+        logger.error(f"❌ Script generation failed for {script_id}: {str(e)}")
+        logger.error(f"🔍 Error type: {type(e).__name__}")
+        
         # エラー処理
-        job = db.query(ScriptGenerationJob).filter(
-            ScriptGenerationJob.job_id == job_id
+        script = db.query(ImprovementScript).filter(
+            ImprovementScript.id == script_id
         ).first()
         
-        if job:
-            job.status = "failed"
-            job.error_message = str(e)
-            job.completed_at = datetime.utcnow()
+        if script:
+            script.status = "failed"
+            script.updated_at = datetime.utcnow()
             db.commit()
+            logger.info(f"📊 Script status updated to 'failed'")
+        else:
+            logger.error(f"❌ Could not find script {script_id} to update failure status")
 
 
 # ヘルスチェック

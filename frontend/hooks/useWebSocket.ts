@@ -43,9 +43,10 @@ export const useWebSocket = ({
     if (!enabled || !sessionId) return;
 
     try {
+      // プロダクション環境では環境変数を使用、開発環境では相対パスを使用
       const wsUrl = process.env.NEXT_PUBLIC_WS_URL 
         ? `${process.env.NEXT_PUBLIC_WS_URL}/ws/${sessionId}`
-        : `ws://localhost:8000/api/v1/ws/${sessionId}`;
+        : `ws://${window.location.host}/api/v1/ws/${sessionId}`;
       const ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {

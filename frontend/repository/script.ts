@@ -65,13 +65,19 @@ export const getScript = async (scriptId: string): Promise<ImprovementScript> =>
   return response.data;
 };
 
+export interface ScriptsListResponse {
+  scripts: ImprovementScript[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
 export const getScripts = async (params?: {
-  skip?: number;
+  offset?: number;
   limit?: number;
   status?: string;
-  is_active?: boolean;
-}): Promise<ImprovementScript[]> => {
-  const response = await apiClient.get<ImprovementScript[]>('/scripts/', { params });
+}): Promise<ScriptsListResponse> => {
+  const response = await apiClient.get<ScriptsListResponse>('/scripts/', { params });
   return response.data;
 };
 

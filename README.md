@@ -49,6 +49,12 @@ docker-compose up -d
 ### ベクトルDBマイグレーション実行
 - source .venv/bin/activate && python -m alembic -c alembic_vector.ini upgrade head
 
+###　全テーブル削除
+DROP SCHEMA public CASCADE;
+CREATE SCHEMA public;
+GRANT ALL ON SCHEMA public TO postgres;
+GRANT ALL ON SCHEMA public TO public;
+
 ### APIドキュメント
 バックエンド起動後、以下のURLでAPIドキュメントを確認できます：
 - Swagger UI: http://localhost:8000/docs

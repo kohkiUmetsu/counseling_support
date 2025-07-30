@@ -106,10 +106,8 @@ class ClusteringService:
     
     def _get_success_vectors(self) -> List[Dict[str, Any]]:
         """成功会話ベクトルを取得"""
-        query = self.db.query(SuccessConversationVector).join(
-            SuccessConversationVector.session
-        ).filter(
-            SuccessConversationVector.session.has(is_success=True)
+        query = self.db.query(SuccessConversationVector).filter(
+            SuccessConversationVector.is_success == True
         ).all()
         
         return [
@@ -135,8 +133,7 @@ class ClusteringService:
         default_params = {
             'n_init': 10,
             'max_iter': 300,
-            'random_state': 42,
-            'n_jobs': -1  # 並列処理
+            'random_state': 42
         }
         if params:
             default_params.update(params)
@@ -156,7 +153,7 @@ class ClusteringService:
                 
                 # シルエット係数で評価
                 if len(set(labels)) > 1:  # クラスタが複数ある場合のみ
-                    silhouette_avg = silhouette_score(vectors, labels)
+                    silhouette_avg = float(silhouette_score(vectors, labels))
                     scores_by_k[k] = silhouette_avg
                     
                     if silhouette_avg > best_score:
@@ -179,6 +176,7 @@ class ClusteringService:
         # 各ベクトルの重心からの距離を計算
         distances_to_centroids = []
         for i, (vector, label) in enumerate(zip(vectors, final_labels)):
+            label = int(label)  # numpyスカラーをintに変換
             if label >= 0:  # 有効なクラスタ
                 centroid = centroids[label]
                 distance = np.linalg.norm(vector - centroid)
@@ -251,10 +249,10 @@ class ClusteringService:
         if n_clusters > 1:
             valid_indices = cluster_labels >= 0
             if np.sum(valid_indices) > 1:
-                silhouette_avg = silhouette_score(
+                silhouette_avg = float(silhouette_score(
                     vectors[valid_indices], 
                     cluster_labels[valid_indices]
-                )
+                ))
         
         # 各ベクトルの所属クラスタ重心からの距離を計算
         distances_to_centroids = []
@@ -262,13 +260,14 @@ class ClusteringService:
         
         # 各クラスタの重心を計算
         for label in unique_labels:
-            if label >= 0:  # ノイズではない
+            if int(label) >= 0:  # ノイズではない
                 cluster_vectors = vectors[cluster_labels == label]
                 centroid = np.mean(cluster_vectors, axis=0)
                 cluster_centroids[label] = centroid
         
         # 各ベクトルの重心からの距離
         for i, label in enumerate(cluster_labels):
+            label = int(label)  # numpyスカラーをintに変換
             if label >= 0 and label in cluster_centroids:
                 distance = np.linalg.norm(vectors[i] - cluster_centroids[label])
                 distances_to_centroids.append(distance)
@@ -315,6 +314,10 @@ class ClusteringService:
         """クラスタリング結果をデータベースに保存"""
         
         try:
+            logger.info(f"💾 Saving clustering result - algorithm: {algorithm}, clusters: {cluster_count}")
+            logger.info(f"📊 Labels type: {type(labels)}, length: {len(labels) if hasattr(labels, '__len__') else 'no length'}")
+            logger.info(f"📋 Labels preview: {labels[:5] if len(labels) >= 5 else labels}")
+            logger.info(f"🎯 Centroids type: {type(centroids)}, shape: {centroids.shape if hasattr(centroids, 'shape') else 'no shape'}")
             # ClusterResultを保存
             cluster_result = ClusterResult(
                 algorithm=algorithm,
@@ -326,16 +329,22 @@ class ClusteringService:
             self.db.flush()  # IDを取得するため
             
             # ClusterAssignmentを一括保存
+            logger.info(f"🔄 Processing {len(labels)} cluster assignments")
             assignments = []
             for i, (vector_id, label) in enumerate(zip(vector_ids, labels)):
+                logger.debug(f"Processing assignment {i}: vector_id={vector_id}, label={label} (type: {type(label)})")
+                # numpyスカラーをPythonのintに変換
+                label = int(label)
+                
                 # 重心からの距離を計算（centroids が利用可能な場合）
                 distance_to_centroid = None
-                if centroids and label >= 0 and label < len(centroids):
+                logger.debug(f"Checking centroids: centroids={centroids is not None}, label={label}, label >= 0: {label >= 0}")
+                if centroids is not None and label >= 0 and label < len(centroids):
                     vector_embedding = self.db.query(SuccessConversationVector.embedding).filter(
                         SuccessConversationVector.id == vector_id
                     ).scalar()
                     
-                    if vector_embedding:
+                    if vector_embedding is not None:
                         centroid = np.array(centroids[label])
                         vector_np = np.array(vector_embedding)
                         distance_to_centroid = float(np.linalg.norm(vector_np - centroid))
@@ -370,7 +379,7 @@ class OptimalClustersDetector:
         k_values = list(range(k_range[0], min(k_range[1] + 1, len(vectors))))
         
         for k in k_values:
-            kmeans = KMeans(n_clusters=k, random_state=42, n_jobs=-1)
+            kmeans = KMeans(n_clusters=k, random_state=42)
             kmeans.fit(vectors)
             inertias.append(kmeans.inertia_)
         

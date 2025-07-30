@@ -143,7 +143,7 @@ class VectorSearchOptimizationService:
             v.id,
             v.session_id,
             v.chunk_text,
-            v.metadata,
+            v.session_metadata,
             v.created_at,
             (v.embedding <=> :query_vector) as similarity_score
         FROM success_conversation_vectors v
@@ -154,13 +154,13 @@ class VectorSearchOptimizationService:
         
         if filters:
             if filters.get('success_rate_min'):
-                where_conditions.append("(v.metadata->>'success_rate')::float >= :success_rate_min")
+                where_conditions.append("(v.session_metadata->>'success_rate')::float >= :success_rate_min")
             
             if filters.get('date_range'):
                 where_conditions.append("v.created_at BETWEEN :date_start AND :date_end")
             
             if filters.get('counselor_ids'):
-                where_conditions.append("v.metadata->>'counselor_id' = ANY(:counselor_ids)")
+                where_conditions.append("v.session_metadata->>'counselor_id' = ANY(:counselor_ids)")
         
         where_clause = " WHERE " + " AND ".join(where_conditions)
         
@@ -215,7 +215,7 @@ class VectorSearchOptimizationService:
                 "id": str(row.id),
                 "session_id": str(row.session_id),
                 "text": row.chunk_text,
-                "metadata": row.metadata,
+                "metadata": row.session_metadata,
                 "similarity_score": float(row.similarity_score),
                 "created_at": row.created_at.isoformat()
             })

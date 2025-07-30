@@ -60,19 +60,18 @@ class VectorSearchService:
             # ベクトル検索クエリを構築
             query_vector = f"[{','.join(map(str, query_embedding))}]"
             
-            # 基本のSQLクエリ
+            # 基本のSQLクエリ（ベクトルDBのテーブルのみ使用）
             base_query = """
             SELECT 
                 scv.session_id,
                 scv.chunk_text,
-                scv.metadata,
-                (1 - (scv.embedding <=> %s::vector)) as similarity_score,
-                cs.counselor_name,
-                cs.created_at,
-                cs.is_success
+                scv.session_metadata,
+                scv.counselor_name,
+                scv.created_at,
+                scv.is_success,
+                (1 - (scv.embedding <=> %s::vector)) as similarity_score
             FROM success_conversation_vectors scv
-            JOIN counseling_sessions cs ON scv.session_id = cs.id
-            WHERE cs.is_success = true
+            WHERE scv.is_success = true
             """
             
             params = [query_vector]
@@ -81,13 +80,13 @@ class VectorSearchService:
             if filters:
                 if filters.get('date_range'):
                     start_date, end_date = filters['date_range']
-                    base_query += " AND cs.created_at BETWEEN %s AND %s"
+                    base_query += " AND scv.created_at BETWEEN %s AND %s"
                     params.extend([start_date, end_date])
                 
                 if filters.get('counselor_names'):
                     counselor_list = filters['counselor_names']
                     placeholders = ', '.join(['%s'] * len(counselor_list))
-                    base_query += f" AND cs.counselor_name IN ({placeholders})"
+                    base_query += f" AND scv.counselor_name IN ({placeholders})"
                     params.extend(counselor_list)
             
             # 類似度フィルタと並び替え
@@ -109,7 +108,7 @@ class VectorSearchService:
                     'session_id': str(row.session_id),
                     'chunk_text': row.chunk_text,
                     'similarity_score': float(row.similarity_score),
-                    'metadata': row.metadata or {},
+                    'metadata': row.session_metadata or {},
                     'session_info': {
                         'counselor_name': row.counselor_name,
                         'created_at': row.created_at,

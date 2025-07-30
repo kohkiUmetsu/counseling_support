@@ -89,7 +89,6 @@ class HighQualityPromptBuilder:
                     'optimization_applied': optimization_applied,
                     'cost_reduction_rate': (initial_token_count - final_token_count) / initial_token_count if optimization_applied else 0,
                     'sections': {section: self._count_tokens(content) for section, content in sections.items()},
-                    'generation_config': config,
                     'created_at': datetime.utcnow().isoformat()
                 }
             }

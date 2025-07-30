@@ -24,9 +24,10 @@ logger = logging.getLogger(__name__)
 class ScriptGenerationService:
     """スクリプト生成メインサービス"""
     
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, vector_db: Session = None):
         self.db = db
-        self.openai_client = AsyncOpenAI(api_key=settings.openai_api_key)
+        self.vector_db = vector_db
+        self.openai_client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
         self.prompt_builder = create_prompt_builder()
         self.encoding = tiktoken.get_encoding("cl100k_base")
         self.model = "gpt-4o"
@@ -116,7 +117,14 @@ class ScriptGenerationService:
         filters = analysis_data.get('filters', {})
         
         # 代表例取得
-        extraction_service = create_representative_extraction_service(self.db)
+        # ベクトルDBセッションがない場合は新しく作成
+        if self.vector_db is None:
+            from app.core.database import get_vector_database
+            vector_db_session = next(get_vector_database())
+        else:
+            vector_db_session = self.vector_db
+        
+        extraction_service = create_representative_extraction_service(vector_db_session)
         representatives = await extraction_service.get_representatives_for_script_generation(
             cluster_result_id=cluster_result_id,
             max_total_representatives=8
@@ -125,7 +133,7 @@ class ScriptGenerationService:
         # 失敗→成功マッピング生成
         failure_mappings = []
         if failure_conversations:
-            search_service = create_vector_search_service(self.db)
+            search_service = create_vector_search_service(vector_db_session)
             
             for failure in failure_conversations:
                 mapping = await search_service.search_similar_for_failure_conversation(
@@ -451,6 +459,6 @@ class ResponseParser:
 
 
 # ユーティリティ関数
-def create_script_generation_service(db: Session) -> ScriptGenerationService:
+def create_script_generation_service(db: Session, vector_db: Session = None) -> ScriptGenerationService:
     """ScriptGenerationServiceのファクトリー関数"""
-    return ScriptGenerationService(db)
+    return ScriptGenerationService(db, vector_db)

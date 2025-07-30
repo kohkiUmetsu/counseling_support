@@ -27,11 +27,17 @@ async def vectorize_transcription(
     Vectorize transcription and store in vector database
     This runs asynchronously in the background
     """
+    logger.info(f"🔄 Starting vectorization process for session {session_id}")
+    logger.info(f"   - Counselor: {counselor_name}")
+    logger.info(f"   - Is Success: {is_success}")
+    logger.info(f"   - Segments count: {len(segments)}")
+    
     vector_db = None
     try:
         # Get vector database session
         from app.db.session import VectorSessionLocal
         vector_db = VectorSessionLocal()
+        logger.info(f"📊 Connected to vector database for session {session_id}")
         
         # Check if vectors already exist for this session
         existing_vectors = vector_db.query(SuccessConversationVector).filter(
@@ -39,7 +45,7 @@ async def vectorize_transcription(
         ).first()
         
         if existing_vectors:
-            logger.info(f"Vectors already exist for session {session_id}, skipping")
+            logger.info(f"⚠️  Vectors already exist for session {session_id}, skipping vectorization")
             return
         
         # Prepare conversation text with speaker information
@@ -77,8 +83,12 @@ async def vectorize_transcription(
         
         for i, chunk_text in enumerate(conversation_chunks):
             try:
+                logger.info(f"Processing chunk {i+1}/{len(conversation_chunks)} for session {session_id}")
+                logger.info(f"Chunk text preview: {chunk_text[:100]}...")
+                
                 # Generate embedding
                 embedding = await embedding_service.embed_text(chunk_text)
+                logger.info(f"Generated embedding vector of dimension {len(embedding)} for chunk {i}")
                 
                 # Create vector record
                 vector_record = SuccessConversationVector(
@@ -88,7 +98,7 @@ async def vectorize_transcription(
                     embedding=embedding,
                     counselor_name=counselor_name,
                     is_success=is_success if is_success is not None else False,
-                    metadata={
+                    session_metadata={
                         "chunk_number": i + 1,
                         "total_chunks": len(conversation_chunks),
                         "chunk_tokens": embedding_service.count_tokens(chunk_text)
@@ -96,6 +106,7 @@ async def vectorize_transcription(
                 )
                 
                 vector_db.add(vector_record)
+                logger.info(f"Added vector record to database for chunk {i}")
                 
             except Exception as chunk_error:
                 logger.error(f"Failed to vectorize chunk {i} for session {session_id}: {chunk_error}")
@@ -103,7 +114,13 @@ async def vectorize_transcription(
         
         # Commit all vectors
         vector_db.commit()
-        logger.info(f"Successfully vectorized {len(conversation_chunks)} chunks for session {session_id}")
+        logger.info(f"✅ Successfully committed {len(conversation_chunks)} vectors to database for session {session_id}")
+        
+        # Verify the data was saved
+        saved_vectors = vector_db.query(SuccessConversationVector).filter(
+            SuccessConversationVector.session_id == session_id
+        ).count()
+        logger.info(f"✅ Verification: {saved_vectors} vectors found in database for session {session_id}")
         
     except Exception as e:
         logger.error(f"Vectorization failed for session {session_id}: {str(e)}")
@@ -121,13 +138,18 @@ async def start_transcription(
     """
     Start transcription process for a session (synchronous processing)
     """
+    logger.info(f"🎯 Transcription API called for session {session_id}")
+    
     # Check if session exists
     session = db.query(CounselingSession).filter(
         CounselingSession.id == session_id
     ).first()
     
     if not session:
+        logger.error(f"❌ Session {session_id} not found in database")
         raise HTTPException(status_code=404, detail="Session not found")
+        
+    logger.info(f"📋 Session {session_id} found - is_success: {session.is_success}, counselor: {session.counselor_name}")
     
     # Check if transcription is already completed
     if session.transcription_status == "completed":
@@ -180,9 +202,13 @@ async def start_transcription(
         session.transcription_status = "completed"
         db.commit()
         
+        logger.info(f"✅ Transcription completed and saved for session {session_id}")
+        logger.info(f"🔍 Checking if session should be vectorized - is_success: {session.is_success}")
+        
         # Automatically vectorize the transcription only for successful sessions
         if session.is_success is True:
             try:
+                logger.info(f"🚀 Session {session_id} is marked as successful (is_success=True), starting vectorization...")
                 # Run vectorization in background to avoid blocking the response
                 asyncio.create_task(
                     vectorize_transcription(
@@ -193,12 +219,12 @@ async def start_transcription(
                         is_success=session.is_success
                     )
                 )
-                logger.info(f"Started vectorization for successful session {session_id}")
+                logger.info(f"✅ Started background vectorization task for session {session_id}")
             except Exception as vector_error:
-                logger.error(f"Failed to start vectorization for session {session_id}: {vector_error}")
+                logger.error(f"❌ Failed to start vectorization for session {session_id}: {vector_error}")
                 # Don't fail the transcription if vectorization fails
         else:
-            logger.info(f"Skipping vectorization for session {session_id} (is_success={session.is_success})")
+            logger.info(f"⏭️  Skipping vectorization for session {session_id} (is_success={session.is_success})")
         
         return {
             "message": "Transcription completed",

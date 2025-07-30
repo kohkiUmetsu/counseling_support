@@ -23,7 +23,7 @@ class SuccessConversationVector(VectorBase):
     chunk_index = Column(Integer, nullable=False, default=0)
     counselor_name = Column(Text, nullable=True)
     is_success = Column(Boolean, nullable=True)
-    metadata = Column(JSONB, nullable=True)
+    session_metadata = Column(JSONB, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Note: No relationship to CounselingSession as it's in a different database
