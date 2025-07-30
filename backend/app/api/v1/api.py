@@ -1,5 +1,6 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import sessions, transcriptions, websocket, vectors, scripts
+from app.api.v1.endpoints import sessions, transcriptions, websocket, scripts
+# Note: vectors endpoint moved to separate vector API service
 
 api_router = APIRouter()
 
@@ -21,13 +22,9 @@ api_router.include_router(
 )
 
 api_router.include_router(
-    vectors.router,
-    prefix="/vectors",
-    tags=["vectors"]
-)
-
-api_router.include_router(
     scripts.router,
     prefix="/scripts",
     tags=["scripts"]
 )
+
+# Note: Vector endpoints are now handled by separate service using vector DB

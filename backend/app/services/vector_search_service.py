@@ -347,6 +347,6 @@ class SimilarityCalculator:
 
 
 # ユーティリティ関数
-def create_vector_search_service(db: Session) -> VectorSearchService:
+def create_vector_search_service(vector_db: Session) -> VectorSearchService:
     """VectorSearchServiceのファクトリー関数"""
-    return VectorSearchService(db)
+    return VectorSearchService(vector_db)

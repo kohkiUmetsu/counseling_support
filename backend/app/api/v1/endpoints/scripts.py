@@ -18,7 +18,7 @@ from app.models.script import (
 )
 from app.services.script_generation_service import create_script_generation_service
 from app.services.script_quality_analyzer import create_script_quality_analyzer
-from app.services.representative_extraction_service import create_representative_extraction_service
+# Note: representative_extraction_service moved to vector DB endpoints
 
 
 router = APIRouter()

@@ -8,26 +8,25 @@ from pgvector.sqlalchemy import Vector
 import uuid
 from datetime import datetime
 
-from app.db.base_class import Base
+from app.db.base_class import VectorBase
 
 
-class SuccessConversationVector(Base):
+class SuccessConversationVector(VectorBase):
     """成功会話のベクトル化データ"""
     __tablename__ = "success_conversation_vectors"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    session_id = Column(Text, ForeignKey("counseling_sessions.id"), nullable=False)
+    session_id = Column(Text, nullable=False)  # Remove foreign key constraint
     chunk_text = Column(Text, nullable=False)
     embedding = Column(Vector(1536), nullable=False)  # OpenAI text-embedding-3-small の次元数
     chunk_metadata = Column(JSONB, nullable=True)
     chunk_index = Column(Integer, nullable=False, default=0)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    # リレーション
-    session = relationship("CounselingSession", back_populates="vectors")
+    # Note: No relationship to CounselingSession as it's in a different database
 
 
-class ClusterResult(Base):
+class ClusterResult(VectorBase):
     """クラスタリング結果"""
     __tablename__ = "cluster_results"
 
@@ -43,7 +42,7 @@ class ClusterResult(Base):
     representatives = relationship("ClusterRepresentative", back_populates="cluster_result")
 
 
-class ClusterAssignment(Base):
+class ClusterAssignment(VectorBase):
     """ベクトルのクラスタ割り当て"""
     __tablename__ = "cluster_assignments"
 
@@ -58,7 +57,7 @@ class ClusterAssignment(Base):
     cluster_result = relationship("ClusterResult", back_populates="cluster_assignments")
 
 
-class ClusterRepresentative(Base):
+class ClusterRepresentative(VectorBase):
     """クラスタ代表例"""
     __tablename__ = "cluster_representatives"
 
@@ -76,7 +75,7 @@ class ClusterRepresentative(Base):
     vector = relationship("SuccessConversationVector")
 
 
-class AnomalyDetectionResult(Base):
+class AnomalyDetectionResult(VectorBase):
     """異常検出結果"""
     __tablename__ = "anomaly_detection_results"
 

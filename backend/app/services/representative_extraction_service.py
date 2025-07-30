@@ -541,6 +541,6 @@ class RepresentativeExtractionService:
 
 
 # ユーティリティ関数
-def create_representative_extraction_service(db: Session) -> RepresentativeExtractionService:
+def create_representative_extraction_service(vector_db: Session) -> RepresentativeExtractionService:
     """RepresentativeExtractionServiceのファクトリー関数"""
-    return RepresentativeExtractionService(db)
+    return RepresentativeExtractionService(vector_db)

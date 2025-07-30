@@ -1,13 +1,6 @@
-# SQLAlchemy models package
+# SQLAlchemy models package - Main Database only
 from .session import CounselingSession
-from .transcription import Transcription
-from .vector import (
-    SuccessConversationVector,
-    ClusterResult,
-    ClusterAssignment,
-    ClusterRepresentative,
-    AnomalyDetectionResult
-)
+from .transcription import Transcription, TranscriptionSegment
 from .script import (
     ImprovementScript,
     ScriptUsageAnalytics,
@@ -17,3 +10,4 @@ from .script import (
     ScriptTemplate,
     ScriptPerformanceMetrics
 )
+# Note: Vector models are now in separate database

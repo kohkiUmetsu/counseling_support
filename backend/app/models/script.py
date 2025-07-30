@@ -33,7 +33,7 @@ class ImprovementScript(Base):
     is_active = Column(Boolean, default=False)
     
     # 生成元データ情報
-    cluster_result_id = Column(UUID(as_uuid=True), ForeignKey("cluster_results.id"), nullable=True)
+    cluster_result_id = Column(UUID(as_uuid=True), nullable=True)  # Reference to vector DB, no FK constraint
     based_on_failure_sessions = Column(JSONB, nullable=True)  # 失敗セッションIDのリスト
     
     # タイムスタンプ
@@ -42,7 +42,7 @@ class ImprovementScript(Base):
     activated_at = Column(DateTime, nullable=True)
     
     # リレーション
-    cluster_result = relationship("ClusterResult")
+    # Note: cluster_result relationship removed due to database separation
     usage_analytics = relationship("ScriptUsageAnalytics", back_populates="script")
     feedback_entries = relationship("ScriptFeedback", back_populates="script")
 

@@ -441,6 +441,6 @@ class OptimalClustersDetector:
 
 
 # ユーティリティ関数
-def create_clustering_service(db: Session) -> ClusteringService:
+def create_clustering_service(vector_db: Session) -> ClusteringService:
     """ClusteringServiceのファクトリー関数"""
-    return ClusteringService(db)
+    return ClusteringService(vector_db)
