@@ -12,7 +12,7 @@ import {
   updateTranscriptionSegment,
   TranscriptionData,
   TranscriptionStatus
-} from '@/features/services/transcription';
+} from '@/repository';
 import { AlertCircle, Play, RefreshCw } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 

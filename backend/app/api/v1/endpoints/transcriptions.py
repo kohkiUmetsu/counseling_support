@@ -3,11 +3,115 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.models.session import CounselingSession
 from app.models.transcription import Transcription
+from app.models.vector import SuccessConversationVector
 from app.services.transcription.whisper_service import whisper_service
 from app.services.transcription.speaker_diarization import speaker_diarization_service
+from app.services.embedding_service import embedding_service
 from datetime import datetime, timezone
+import asyncio
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+async def vectorize_transcription(
+    session_id: str,
+    full_text: str,  # Kept for potential future use
+    segments: list,
+    counselor_name: str = None,
+    is_success: bool = None
+):
+    """
+    Vectorize transcription and store in vector database
+    This runs asynchronously in the background
+    """
+    vector_db = None
+    try:
+        # Get vector database session
+        from app.db.session import VectorSessionLocal
+        vector_db = VectorSessionLocal()
+        
+        # Check if vectors already exist for this session
+        existing_vectors = vector_db.query(SuccessConversationVector).filter(
+            SuccessConversationVector.session_id == session_id
+        ).first()
+        
+        if existing_vectors:
+            logger.info(f"Vectors already exist for session {session_id}, skipping")
+            return
+        
+        # Prepare conversation text with speaker information
+        conversation_chunks = []
+        current_chunk = []
+        current_tokens = 0
+        
+        for segment in segments:
+            speaker = segment.get("speaker", "unknown")
+            text = segment.get("text", "").strip()
+            
+            if not text:
+                continue
+                
+            # Format: "Speaker: text"
+            formatted_segment = f"{speaker}: {text}"
+            segment_tokens = embedding_service.count_tokens(formatted_segment)
+            
+            # Check if adding this segment would exceed max tokens
+            if current_tokens + segment_tokens > embedding_service.max_tokens and current_chunk:
+                # Save current chunk
+                conversation_chunks.append("\n".join(current_chunk))
+                current_chunk = [formatted_segment]
+                current_tokens = segment_tokens
+            else:
+                current_chunk.append(formatted_segment)
+                current_tokens += segment_tokens
+        
+        # Add the last chunk
+        if current_chunk:
+            conversation_chunks.append("\n".join(current_chunk))
+        
+        # Generate embeddings for each chunk
+        logger.info(f"Generating embeddings for {len(conversation_chunks)} chunks from session {session_id}")
+        
+        for i, chunk_text in enumerate(conversation_chunks):
+            try:
+                # Generate embedding
+                embedding = await embedding_service.embed_text(chunk_text)
+                
+                # Create vector record
+                vector_record = SuccessConversationVector(
+                    session_id=session_id,
+                    chunk_index=i,
+                    chunk_text=chunk_text,
+                    embedding=embedding,
+                    counselor_name=counselor_name,
+                    is_success=is_success if is_success is not None else False,
+                    metadata={
+                        "chunk_number": i + 1,
+                        "total_chunks": len(conversation_chunks),
+                        "chunk_tokens": embedding_service.count_tokens(chunk_text)
+                    }
+                )
+                
+                vector_db.add(vector_record)
+                
+            except Exception as chunk_error:
+                logger.error(f"Failed to vectorize chunk {i} for session {session_id}: {chunk_error}")
+                continue
+        
+        # Commit all vectors
+        vector_db.commit()
+        logger.info(f"Successfully vectorized {len(conversation_chunks)} chunks for session {session_id}")
+        
+    except Exception as e:
+        logger.error(f"Vectorization failed for session {session_id}: {str(e)}")
+        if vector_db:
+            vector_db.rollback()
+    finally:
+        if vector_db:
+            vector_db.close()
 
 @router.post("/{session_id}/start")
 async def start_transcription(
@@ -75,6 +179,26 @@ async def start_transcription(
         db.add(transcription)
         session.transcription_status = "completed"
         db.commit()
+        
+        # Automatically vectorize the transcription only for successful sessions
+        if session.is_success is True:
+            try:
+                # Run vectorization in background to avoid blocking the response
+                asyncio.create_task(
+                    vectorize_transcription(
+                        session_id=session_id,
+                        full_text=transcription_result["full_text"],
+                        segments=enhanced_segments,
+                        counselor_name=session.counselor_name,
+                        is_success=session.is_success
+                    )
+                )
+                logger.info(f"Started vectorization for successful session {session_id}")
+            except Exception as vector_error:
+                logger.error(f"Failed to start vectorization for session {session_id}: {vector_error}")
+                # Don't fail the transcription if vectorization fails
+        else:
+            logger.info(f"Skipping vectorization for session {session_id} (is_success={session.is_success})")
         
         return {
             "message": "Transcription completed",

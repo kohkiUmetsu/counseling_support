@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useScript } from '@/features/hooks/useScript';
+import { useScript } from '@/hooks/useScript';
 import { ScriptHeader } from '@/app/components/scripts/ScriptHeader';
 import { ScriptPhaseNavigator } from '@/app/components/scripts/ScriptPhaseNavigator';
 import { ScriptContent } from '@/app/components/scripts/ScriptContent';

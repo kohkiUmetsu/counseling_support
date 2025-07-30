@@ -7,7 +7,7 @@ import { AudioPlayer } from '@/app/components/audio/AudioPlayer';
 import { getSession } from '@/repository';
 import { SessionData } from '@/repository';
 import { LoadingSpinner } from '@/app/components/ui/LoadingSpinner';
-import { getTranscriptionStatus, getTranscription } from '@/features/services/transcription';
+import { getTranscriptionStatus, getTranscription } from '@/repository';
 import { TranscriptionViewer } from '@/app/components/transcription/TranscriptionViewer';
 import { CheckCircle2 } from 'lucide-react';
 
